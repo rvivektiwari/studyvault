@@ -6,7 +6,6 @@ import {
   RedirectToSignIn, 
   useUser, 
   useClerk, 
-  useAuth,
   UserProfile 
 } from '@clerk/clerk-react';
 import { useSupabase } from './hooks/useSupabase';
@@ -32,14 +31,14 @@ const COLORS = {
 };
 
 const ICONS = {
-  Home: () => <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokelinejoin="round"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"></path><polyline points="9 22 9 12 15 12 15 22"></polyline></svg>,
-  Starred: () => <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokelinejoin="round"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"></polygon></svg>,
-  Search: () => <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokelinejoin="round"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>,
-  Profile: () => <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokelinejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path><circle cx="12" cy="7" r="4"></circle></svg>,
-  Review: () => <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokelinejoin="round"><polyline points="23 4 23 10 17 10"></polyline><polyline points="1 20 1 14 7 14"></polyline><path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"></path></svg>,
-  Feed: () => <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokelinejoin="round"><circle cx="12" cy="12" r="10"></circle><line x1="2" y1="12" x2="22" y2="12"></line><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"></path></svg>,
-  StarFilled: () => <svg width="24" height="24" viewBox="0 0 24 24" fill="currentColor" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokelinejoin="round"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"></polygon></svg>,
-  Bell: () => <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokelinejoin="round"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"></path><path d="M13.73 21a2 2 0 0 1-3.46 0"></path></svg>,
+  Home: () => <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"></path><polyline points="9 22 9 12 15 12 15 22"></polyline></svg>,
+  Starred: () => <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"></polygon></svg>,
+  Search: () => <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>,
+  Profile: () => <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path><circle cx="12" cy="7" r="4"></circle></svg>,
+  Review: () => <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polyline points="23 4 23 10 17 10"></polyline><polyline points="1 20 1 14 7 14"></polyline><path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"></path></svg>,
+  Feed: () => <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="10"></circle><line x1="2" y1="12" x2="22" y2="12"></line><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"></path></svg>,
+  StarFilled: () => <svg width="24" height="24" viewBox="0 0 24 24" fill="currentColor" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"></polygon></svg>,
+  Bell: () => <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"></path><path d="M13.73 21a2 2 0 0 1-3.46 0"></path></svg>,
 };
 
 const SUBJECTS = [
@@ -113,8 +112,7 @@ const SettingRow = ({ icon, label, onClick, isDestructive, hasToggle, toggleValu
 export default function App() {
   const { isLoaded, isSignedIn, user } = useUser();
   const { signOut } = useClerk();
-  const { getToken } = useAuth();
-  const { getSupabase, userId } = useSupabase();
+  const { supabase, userId, getDb } = useSupabase();
 
   
   const [entries, setEntries] = useState([]);
@@ -149,7 +147,6 @@ export default function App() {
   // Notifications State
   const [notifications, setNotifications] = useState([]);
   const [unreadCount, setUnreadCount] = useState(0);
-  const [isNotifLoading, setIsNotifLoading] = useState(false);
   
   const searchInputRef = useRef(null);
   
@@ -180,7 +177,7 @@ export default function App() {
     setLoading(true);
     setFetchError(false);
     try {
-      const db = await getSupabase();
+      const db = await getDb();
       const { data, error } = await db
         .from('entries')
         .select('id, user_id, question, answer, subject, chapter, tags, starred, review_count, last_reviewed, created_at, image_url, is_public')
@@ -195,14 +192,36 @@ export default function App() {
     } finally {
       setLoading(false);
     }
-  }, [user, getSupabase]);
+  }, [user, getDb]);
 
+
+  const notifyAllUsers = useCallback(async (fromUserId, entryId, message, type = 'new_feed_post') => {
+    try {
+      const db = await getDb();
+      const { data: allProfiles } = await db
+        .from('profiles')
+        .select('user_id')
+        .neq('user_id', fromUserId);
+      if (!allProfiles || allProfiles.length === 0) return;
+      const notifs = allProfiles.map(p => ({
+        user_id: p.user_id,
+        from_user_id: fromUserId,
+        type,
+        message,
+        entry_id: entryId,
+        is_read: false,
+      }));
+      await db.from('notifications').insert(notifs);
+    } catch (err) {
+      console.error('Notify users error:', err);
+    }
+  }, [getDb]);
 
   // Profile Sync
   const fetchProfile = useCallback(async () => {
     if (!user) return;
     try {
-      const db = await getSupabase();
+      const db = await getDb();
       const { data, error } = await db
         .from('profiles')
         .select('user_id, display_name, avatar_url, bio, reviews_done')
@@ -237,7 +256,7 @@ export default function App() {
     } catch (err) {
       console.error('Fetch profile error:', err);
     }
-  }, [user, getSupabase]);
+  }, [user, getDb, notifyAllUsers]);
 
 
   const getTimeAgo = (dateStr) => {
@@ -257,7 +276,7 @@ export default function App() {
     if (!user) return;
     setIsSharing(true);
     try {
-      const db = await getSupabase();
+      const db = await getDb();
       const { error: updateError } = await db
         .from('entries')
         .update({ is_public: true })
@@ -274,6 +293,7 @@ export default function App() {
         `${profile?.display_name || user.firstName} shared a new question in ${entry.subject}`);
       setSelectedEntry(prev => ({ ...prev, is_public: true }));
       setEntries(prev => prev.map(e => e.id === entry.id ? { ...e, is_public: true } : e));
+      if (currentTab === 'Feed') await fetchFeed();
     } catch (err) {
       console.error('Share to feed error:', err);
       showToast('Failed to share. Try again.', 'error');
@@ -287,7 +307,7 @@ export default function App() {
     if (!user) return;
     setIsSharing(true);
     try {
-      const db = await getSupabase();
+      const db = await getDb();
       const { error: updateError } = await db
         .from('entries')
         .update({ is_public: false })
@@ -303,6 +323,7 @@ export default function App() {
       showToast('Removed from class feed', 'success');
       setSelectedEntry(prev => ({ ...prev, is_public: false }));
       setEntries(prev => prev.map(e => e.id === entry.id ? { ...e, is_public: false } : e));
+      if (currentTab === 'Feed') await fetchFeed();
     } catch (err) {
       console.error('Remove from feed error:', err);
       showToast('Failed to remove. Try again.', 'error');
@@ -312,40 +333,27 @@ export default function App() {
   };
 
 
-  const notifyAllUsers = async (fromUserId, entryId, message, type = 'new_feed_post') => {
-    try {
-      const db = await getSupabase();
-      const { data: allProfiles } = await db
-        .from('profiles')
-        .select('user_id')
-        .neq('user_id', fromUserId);
-      if (!allProfiles || allProfiles.length === 0) return;
-      const notifs = allProfiles.map(p => ({
-        user_id: p.user_id,
-        from_user_id: fromUserId,
-        type,
-        message,
-        entry_id: entryId,
-        is_read: false,
-      }));
-      await db.from('notifications').insert(notifs);
-    } catch (err) {
-      console.error('Notify users error:', err);
-    }
-  };
-
   const requestNotificationPermission = async () => {
     if (!('Notification' in window)) {
       showToast('Notifications not supported in this browser.', 'info');
       return;
     }
+    if (Notification.permission === 'granted') {
+      setSvNotifs(true);
+      localStorage.setItem('sv_notifs_enabled', 'true');
+      return;
+    }
+    if (Notification.permission === 'denied') {
+      showToast('Notifications blocked. Enable in browser settings.', 'info');
+      return;
+    }
     const permission = await Notification.requestPermission();
     if (permission === 'granted') {
-      showToast('Notifications enabled! 📢', 'success');
+      showToast('✓ Notifications enabled!', 'success');
       setSvNotifs(true);
       localStorage.setItem('sv_notifs_enabled', 'true');
     } else if (permission === 'denied') {
-      showToast('Notifications blocked by browser.', 'error');
+      showToast('Notifications blocked by browser.', 'info');
     }
   };
 
@@ -353,7 +361,7 @@ export default function App() {
     if (!user) return;
     showToast('Sending test notification...', 'info');
     try {
-      const db = await getSupabase();
+      const db = await getDb();
       await db.from('notifications').insert({
         user_id: user.id,
         from_user_id: user.id,
@@ -372,7 +380,7 @@ export default function App() {
   const fetchUnreadCount = useCallback(async () => {
     if (!user) return;
     try {
-      const db = await getSupabase();
+      const db = await getDb();
       const { count } = await db
         .from('notifications')
         .select('id', { count: 'exact', head: true })
@@ -380,14 +388,13 @@ export default function App() {
         .eq('is_read', false);
       setUnreadCount(count || 0);
     } catch (err) { console.error('Fetch unread count error:', err); }
-  }, [user, getSupabase]);
+  }, [user, getDb]);
 
 
   const fetchNotifications = useCallback(async () => {
     if (!user) return;
-    setIsNotifLoading(true);
     try {
-      const db = await getSupabase();
+      const db = await getDb();
       const { data } = await db
         .from('notifications')
         .select('id, message, type, entry_id, is_read, created_at, profiles:from_user_id(display_name, avatar_url)')
@@ -395,16 +402,14 @@ export default function App() {
         .order('created_at', { ascending: false })
         .limit(50);
       setNotifications(data || []);
-    } catch (err) { console.error('Fetch notifications error:', err); } finally {
-      setIsNotifLoading(false);
-    }
-  }, [user, getSupabase]);
+    } catch (err) { console.error('Fetch notifications error:', err); }
+  }, [user, getDb]);
 
 
   const markAllAsRead = async () => {
     if (!user) return;
     try {
-      const db = await getSupabase();
+      const db = await getDb();
       await db.from('notifications').update({ is_read: true })
         .eq('user_id', user.id).eq('is_read', false);
       setUnreadCount(0);
@@ -415,28 +420,31 @@ export default function App() {
 
   const markAsRead = async (notifId) => {
     try {
-      const db = await getSupabase();
-      await db.from('notifications').update({ is_read: true }).eq('id', notifId);
-      setUnreadCount(prev => Math.max(0, prev - 1));
-      setNotifications(prev => prev.map(n => n.id === notifId ? { ...n, is_read: true } : n));
+      const notif = notifications.find(n => n.id === notifId);
+      if (notif && !notif.is_read) {
+        const db = await getDb();
+        await db.from('notifications').update({ is_read: true }).eq('id', notifId);
+        setNotifications(prev => prev.map(n => n.id === notifId ? { ...n, is_read: true } : n));
+        setUnreadCount(prev => Math.max(0, prev - 1));
+      }
     } catch (err) { console.error('Mark read error:', err); }
   };
 
 
   const fetchMemberCount = useCallback(async () => {
     try {
-      const db = await getSupabase();
+      const db = await getDb();
       const { count } = await db
         .from('profiles')
         .select('user_id', { count: 'exact', head: true });
       setMemberCount(count || 0);
     } catch (err) { console.error('Fetch member count error:', err); }
-  }, [getSupabase]);
+  }, [getDb]);
 
 
   const fetchFeed = useCallback(async () => {
     try {
-      const db = await getSupabase();
+      const db = await getDb();
       const { data } = await db
         .from('class_feed')
         .select('posted_at, user_id, entry_id, entries!inner(id, question, answer, subject, chapter, tags, image_url, user_id), profiles!inner(display_name, avatar_url)')
@@ -444,7 +452,7 @@ export default function App() {
         .limit(50);
       setFeedEntries(data || []);
     } catch (err) { console.error('Fetch feed error:', err); }
-  }, [getSupabase]);
+  }, [getDb]);
 
 
   useEffect(() => {
@@ -457,7 +465,7 @@ export default function App() {
 
       // Real-time notifications subscription
       const setupSubscription = async () => {
-        const db = await getSupabase();
+        const db = await getDb();
         const channel = db
           .channel(`notifs-${user.id}`)
           .on('postgres_changes', {
@@ -490,7 +498,7 @@ export default function App() {
       // Cleanup on unmount — prevents memory leaks
       return () => { 
         if (activeChannel) {
-          getSupabase().then(db => db.removeChannel(activeChannel));
+          supabase.removeChannel(activeChannel);
         }
       };
     }
@@ -549,13 +557,12 @@ export default function App() {
     if (!tempName.trim() || !user) return;
     try {
       await user.update({ firstName: tempName.trim() });
-      const db = await getSupabase();
-      const { error } = await db
+      const db = await getDb();
+      await db
         .from('profiles')
         .update({ display_name: tempName.trim() })
         .eq('user_id', user.id);
-      if (error) throw error;
-      setProfile(prev => ({ ...prev, display_name: tempName.trim() }));
+
       setIsEditingName(false);
       showToast('Name updated!', 'success');
     } catch (err) {
@@ -568,13 +575,12 @@ export default function App() {
   const saveBio = async () => {
     if (!user) return;
     try {
-      const db = await getSupabase();
-      const { error } = await db
+      const db = await getDb();
+      await db
         .from('profiles')
         .update({ bio: tempBio.trim() })
         .eq('user_id', user.id);
-      if (error) throw error;
-      setProfile(prev => ({ ...prev, bio: tempBio.trim() }));
+
       setIsEditingBio(false);
       showToast('Bio updated!', 'success');
     } catch (err) {
@@ -620,9 +626,8 @@ export default function App() {
       const blob = await new Promise(resolve => canvas.toBlob(resolve, 'image/jpeg', 0.85));
 
       const path = `${user.id}/avatar.jpg`;
-      const db = await getSupabase();
+      const db = await getDb();
       const { error: uploadError } = await db.storage
-        .from('avatars')
         .upload(path, blob, { upsert: true, contentType: 'image/jpeg' });
       if (uploadError) throw uploadError;
 
@@ -665,12 +670,11 @@ export default function App() {
       btn.style.animation = 'starPop 0.3s ease';
     }
     try {
-      const db = await getSupabase();
+      const db = await getDb();
       const { error } = await db.from('entries').update({ starred: newStarredStatus }).eq('id', entryToToggle.id);
       if (error) throw error;
     } catch (err) {
       console.error('Toggle star error:', err);
-
       // Revert on error
       setEntries(prev => prev.map(en => en.id === entryToToggle.id ? { ...en, starred: !newStarredStatus } : en));
       if (selectedEntry?.id === entryToToggle.id) {
@@ -683,17 +687,17 @@ export default function App() {
   const handleDelete = async () => {
     setIsDeleting(true);
     try {
-      const db = await getSupabase();
+      const db = await getDb();
       const { error } = await db.from('entries').delete().eq('id', selectedEntry.id);
       if (error) throw error;
       setEntries(prev => prev.filter(e => e.id !== selectedEntry.id));
-      setSelectedEntry(null);
       setShowDeleteConfirm(false);
+      setSelectedEntry(null);
+      showToast('✓ Entry deleted', 'success');
     } catch (err) {
       console.error('Delete error:', err);
       showToast('Delete failed. Try again.', 'error');
     } finally {
-
       setIsDeleting(false);
     }
   };
@@ -710,7 +714,7 @@ export default function App() {
     setIsSaving(true);
     
     try {
-      const db = await getSupabase();
+      const db = await getDb();
       const parsedTags = formTags
         ? formTags.split(',').map(t => t.trim()).filter(Boolean)
         : [];
@@ -756,6 +760,7 @@ export default function App() {
         user_id: userId,
         starred: false,
         is_public: false,
+        image_url: imageUrl,
       };
 
       const { data, error } = await db.from('entries').insert(newEntry).select();
@@ -788,7 +793,7 @@ export default function App() {
       const s = new Set(prev); s.delete(entry.id); return s;
     });
     try {
-      const db = await getSupabase();
+      const db = await getDb();
       const { error } = await db.from('entries').update({
         review_count: (entry.review_count || 0) + 1,
         last_reviewed: new Date().toISOString()
@@ -852,7 +857,6 @@ export default function App() {
 
   const totalSaved = entries.length;
   const starred = entries.filter(e => e.starred).length;
-  const subjectsCovered = new Set(entries.map(e => e.subject)).size;
 
   return (
     <>
@@ -872,7 +876,8 @@ export default function App() {
           fontFamily: "'Poppins', sans-serif",
           color: COLORS.textPrimary,
           position: 'relative',
-          overflowX: 'hidden'
+          overflowX: 'hidden',
+          overflowY: 'auto'
         }}>
       {/* Toast Notification */}
       <div style={{
@@ -1034,7 +1039,7 @@ export default function App() {
                     cursor: 'pointer',
                     boxShadow: '0 2px 8px rgba(0,0,0,0.1)'
                   }}>
-                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke={COLORS.primary} strokeWidth="2.5" strokeLinecap="round" strokelinejoin="round"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"></path><circle cx="12" cy="13" r="4"></circle></svg>
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke={COLORS.primary} strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"></path><circle cx="12" cy="13" r="4"></circle></svg>
                     <input type="file" accept="image/*" style={{ display: 'none' }} onChange={handleAvatarUpload} />
                   </label>
                 </div>
@@ -1251,7 +1256,7 @@ export default function App() {
                         await markAsRead(notif.id);
                         if (notif.entry_id) {
                           // Fetch entry detail and open it
-                          const db = await getSupabase();
+                          const db = await getDb();
                           const { data: entryData } = await db.from('entries').select('*').eq('id', notif.entry_id).single();
                           if (entryData) setSelectedEntry(entryData);
                         }
