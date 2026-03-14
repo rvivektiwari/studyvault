@@ -3,8 +3,9 @@
   "short_name": "StudyVault",
   "start_url": "/",
   "display": "standalone",
-  "background_color": "#ffffff",
-  "theme_color": "#2563EB",
+  "background_color": "#F5F7FA",
+  "theme_color": "#2196F3",
+  "orientation": "portrait-primary",
   "icons": [
     {
       "src": "/web-app-manifest-192x192.png",

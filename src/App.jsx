@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback, useRef } from 'react';
-import { supabase } from './supabaseClient';
+
 import { 
   SignedIn, 
   SignedOut, 
@@ -9,7 +9,9 @@ import {
   useAuth,
   UserProfile 
 } from '@clerk/clerk-react';
+import { useSupabase } from './hooks/useSupabase';
 import './index.css';
+
 
 const COLORS = {
   bg: '#F5F7FA',
@@ -112,6 +114,8 @@ export default function App() {
   const { isLoaded, isSignedIn, user } = useUser();
   const { signOut } = useClerk();
   const { getToken } = useAuth();
+  const { getSupabase, userId } = useSupabase();
+
   
   const [entries, setEntries] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -139,6 +143,8 @@ export default function App() {
   const [memberCount, setMemberCount] = useState(0);
   const [isSharing, setIsSharing] = useState(false);
   const [feedSearch, setFeedSearch] = useState('');
+  const [isSearchVisible, setIsSearchVisible] = useState(false);
+
   
   // Notifications State
   const [notifications, setNotifications] = useState([]);
@@ -174,7 +180,7 @@ export default function App() {
     setLoading(true);
     setFetchError(false);
     try {
-      const db = await import('./supabaseClient').then(m => m.getSupabase(getToken));
+      const db = await getSupabase();
       const { data, error } = await db
         .from('entries')
         .select('id, user_id, question, answer, subject, chapter, tags, starred, review_count, last_reviewed, created_at, image_url, is_public')
@@ -183,18 +189,20 @@ export default function App() {
       
       if (error) throw error;
       setEntries(data || []);
-    } catch {
+    } catch (err) {
+      console.error('Fetch entries error:', err);
       setFetchError(true);
     } finally {
       setLoading(false);
     }
-  }, [user, getToken]);
+  }, [user, getSupabase]);
+
 
   // Profile Sync
   const fetchProfile = useCallback(async () => {
     if (!user) return;
     try {
-      const db = await import('./supabaseClient').then(m => m.getSupabase(getToken));
+      const db = await getSupabase();
       const { data, error } = await db
         .from('profiles')
         .select('user_id, display_name, avatar_url, bio, reviews_done')
@@ -226,10 +234,11 @@ export default function App() {
       } else {
         setProfile(data);
       }
-    } catch {
-      // Profile fetch failure is non-critical, continue silently
+    } catch (err) {
+      console.error('Fetch profile error:', err);
     }
-  }, [user, getToken]);
+  }, [user, getSupabase]);
+
 
   const getTimeAgo = (dateStr) => {
     const date = new Date(dateStr);
@@ -248,7 +257,7 @@ export default function App() {
     if (!user) return;
     setIsSharing(true);
     try {
-      const db = await import('./supabaseClient').then(m => m.getSupabase(getToken));
+      const db = await getSupabase();
       const { error: updateError } = await db
         .from('entries')
         .update({ is_public: true })
@@ -265,18 +274,20 @@ export default function App() {
         `${profile?.display_name || user.firstName} shared a new question in ${entry.subject}`);
       setSelectedEntry(prev => ({ ...prev, is_public: true }));
       setEntries(prev => prev.map(e => e.id === entry.id ? { ...e, is_public: true } : e));
-    } catch {
+    } catch (err) {
+      console.error('Share to feed error:', err);
       showToast('Failed to share. Try again.', 'error');
     } finally {
       setIsSharing(false);
     }
   };
 
+
   const handleRemoveFromFeed = async (entry) => {
     if (!user) return;
     setIsSharing(true);
     try {
-      const db = await import('./supabaseClient').then(m => m.getSupabase(getToken));
+      const db = await getSupabase();
       const { error: updateError } = await db
         .from('entries')
         .update({ is_public: false })
@@ -292,16 +303,18 @@ export default function App() {
       showToast('Removed from class feed', 'success');
       setSelectedEntry(prev => ({ ...prev, is_public: false }));
       setEntries(prev => prev.map(e => e.id === entry.id ? { ...e, is_public: false } : e));
-    } catch {
+    } catch (err) {
+      console.error('Remove from feed error:', err);
       showToast('Failed to remove. Try again.', 'error');
     } finally {
       setIsSharing(false);
     }
   };
 
+
   const notifyAllUsers = async (fromUserId, entryId, message, type = 'new_feed_post') => {
     try {
-      const db = await import('./supabaseClient').then(m => m.getSupabase(getToken));
+      const db = await getSupabase();
       const { data: allProfiles } = await db
         .from('profiles')
         .select('user_id')
@@ -316,29 +329,65 @@ export default function App() {
         is_read: false,
       }));
       await db.from('notifications').insert(notifs);
-    } catch {
-      // Silently fail — notifications are non-critical
+    } catch (err) {
+      console.error('Notify users error:', err);
     }
   };
+
+  const requestNotificationPermission = async () => {
+    if (!('Notification' in window)) {
+      showToast('Notifications not supported in this browser.', 'info');
+      return;
+    }
+    const permission = await Notification.requestPermission();
+    if (permission === 'granted') {
+      showToast('Notifications enabled! 📢', 'success');
+      setSvNotifs(true);
+      localStorage.setItem('sv_notifs_enabled', 'true');
+    } else if (permission === 'denied') {
+      showToast('Notifications blocked by browser.', 'error');
+    }
+  };
+
+  const sendTestNotification = async () => {
+    if (!user) return;
+    showToast('Sending test notification...', 'info');
+    try {
+      const db = await getSupabase();
+      await db.from('notifications').insert({
+        user_id: user.id,
+        from_user_id: user.id,
+        type: 'test',
+        message: 'This is a test notification from StudyVault! 📚',
+        is_read: false
+      });
+    } catch (err) {
+      console.error('Test notification error:', err);
+      showToast('Test failed.', 'error');
+    }
+  };
+
+
 
   const fetchUnreadCount = useCallback(async () => {
     if (!user) return;
     try {
-      const db = await import('./supabaseClient').then(m => m.getSupabase(getToken));
+      const db = await getSupabase();
       const { count } = await db
         .from('notifications')
         .select('id', { count: 'exact', head: true })
         .eq('user_id', user.id)
         .eq('is_read', false);
       setUnreadCount(count || 0);
-    } catch { /* silent */ }
-  }, [user, getToken]);
+    } catch (err) { console.error('Fetch unread count error:', err); }
+  }, [user, getSupabase]);
+
 
   const fetchNotifications = useCallback(async () => {
     if (!user) return;
     setIsNotifLoading(true);
     try {
-      const db = await import('./supabaseClient').then(m => m.getSupabase(getToken));
+      const db = await getSupabase();
       const { data } = await db
         .from('notifications')
         .select('id, message, type, entry_id, is_read, created_at, profiles:from_user_id(display_name, avatar_url)')
@@ -346,50 +395,57 @@ export default function App() {
         .order('created_at', { ascending: false })
         .limit(50);
       setNotifications(data || []);
-    } catch { /* silent */ } finally {
+    } catch (err) { console.error('Fetch notifications error:', err); } finally {
       setIsNotifLoading(false);
     }
-  }, [user, getToken]);
+  }, [user, getSupabase]);
+
 
   const markAllAsRead = async () => {
     if (!user) return;
     try {
-      const db = await import('./supabaseClient').then(m => m.getSupabase(getToken));
+      const db = await getSupabase();
       await db.from('notifications').update({ is_read: true })
         .eq('user_id', user.id).eq('is_read', false);
       setUnreadCount(0);
       setNotifications(prev => prev.map(n => ({ ...n, is_read: true })));
-    } catch { /* silent */ }
+    } catch (err) { console.error('Mark all read error:', err); }
   };
+
 
   const markAsRead = async (notifId) => {
     try {
-      const db = await import('./supabaseClient').then(m => m.getSupabase(getToken));
+      const db = await getSupabase();
       await db.from('notifications').update({ is_read: true }).eq('id', notifId);
       setUnreadCount(prev => Math.max(0, prev - 1));
       setNotifications(prev => prev.map(n => n.id === notifId ? { ...n, is_read: true } : n));
-    } catch { /* silent */ }
+    } catch (err) { console.error('Mark read error:', err); }
   };
+
 
   const fetchMemberCount = useCallback(async () => {
     try {
-      const { count } = await supabase
+      const db = await getSupabase();
+      const { count } = await db
         .from('profiles')
         .select('user_id', { count: 'exact', head: true });
       setMemberCount(count || 0);
-    } catch { /* silent */ }
-  }, []);
+    } catch (err) { console.error('Fetch member count error:', err); }
+  }, [getSupabase]);
+
 
   const fetchFeed = useCallback(async () => {
     try {
-      const { data } = await supabase
+      const db = await getSupabase();
+      const { data } = await db
         .from('class_feed')
         .select('posted_at, user_id, entry_id, entries!inner(id, question, answer, subject, chapter, tags, image_url, user_id), profiles!inner(display_name, avatar_url)')
         .order('posted_at', { ascending: false })
         .limit(50);
       setFeedEntries(data || []);
-    } catch { /* silent */ }
-  }, []);
+    } catch (err) { console.error('Fetch feed error:', err); }
+  }, [getSupabase]);
+
 
   useEffect(() => {
     if (isSignedIn && user) {
@@ -400,25 +456,45 @@ export default function App() {
       fetchUnreadCount();
 
       // Real-time notifications subscription
-      const channel = supabase
-        .channel(`notifs-${user.id}`)
-        .on('postgres_changes', {
-          event: 'INSERT',
-          schema: 'public',
-          table: 'notifications',
-          filter: `user_id=eq.${user.id}`,
-        }, payload => {
-          const notif = payload.new;
-          setUnreadCount(prev => prev + 1);
-          showToast(notif.message, 'info');
-          if (navigator.vibrate) navigator.vibrate(200);
-          fetchNotifications();
-        })
-        .subscribe();
+      const setupSubscription = async () => {
+        const db = await getSupabase();
+        const channel = db
+          .channel(`notifs-${user.id}`)
+          .on('postgres_changes', {
+            event: 'INSERT',
+            schema: 'public',
+            table: 'notifications',
+            filter: `user_id=eq.${user.id}`,
+          }, payload => {
+            const notif = payload.new;
+            setUnreadCount(prev => prev + 1);
+            showToast(notif.message, 'info');
+            if (Notification.permission === 'granted' && svNotifs) {
+              new Notification('StudyVault', {
+                body: notif.message,
+                icon: '/web-app-manifest-192x192.png'
+              });
+            }
+            if (navigator.vibrate) navigator.vibrate(200);
+            fetchNotifications();
+
+          })
+          .subscribe();
+        
+        return channel;
+      };
+
+      let activeChannel;
+      setupSubscription().then(channel => { activeChannel = channel; });
 
       // Cleanup on unmount — prevents memory leaks
-      return () => { supabase.removeChannel(channel); };
+      return () => { 
+        if (activeChannel) {
+          getSupabase().then(db => db.removeChannel(activeChannel));
+        }
+      };
     }
+
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [isSignedIn, user?.id]);
 
@@ -473,7 +549,7 @@ export default function App() {
     if (!tempName.trim() || !user) return;
     try {
       await user.update({ firstName: tempName.trim() });
-      const db = await import('./supabaseClient').then(m => m.getSupabase(getToken));
+      const db = await getSupabase();
       const { error } = await db
         .from('profiles')
         .update({ display_name: tempName.trim() })
@@ -482,15 +558,17 @@ export default function App() {
       setProfile(prev => ({ ...prev, display_name: tempName.trim() }));
       setIsEditingName(false);
       showToast('Name updated!', 'success');
-    } catch {
+    } catch (err) {
+      console.error('Save name error:', err);
       showToast('Failed to update name. Try again.', 'error');
     }
+
   };
 
   const saveBio = async () => {
     if (!user) return;
     try {
-      const db = await import('./supabaseClient').then(m => m.getSupabase(getToken));
+      const db = await getSupabase();
       const { error } = await db
         .from('profiles')
         .update({ bio: tempBio.trim() })
@@ -499,9 +577,11 @@ export default function App() {
       setProfile(prev => ({ ...prev, bio: tempBio.trim() }));
       setIsEditingBio(false);
       showToast('Bio updated!', 'success');
-    } catch {
+    } catch (err) {
+      console.error('Save bio error:', err);
       showToast('Failed to update bio. Try again.', 'error');
     }
+
   };
 
   const handleAvatarUpload = async (e) => {
@@ -540,11 +620,12 @@ export default function App() {
       const blob = await new Promise(resolve => canvas.toBlob(resolve, 'image/jpeg', 0.85));
 
       const path = `${user.id}/avatar.jpg`;
-      const db = await import('./supabaseClient').then(m => m.getSupabase(getToken));
+      const db = await getSupabase();
       const { error: uploadError } = await db.storage
         .from('avatars')
         .upload(path, blob, { upsert: true, contentType: 'image/jpeg' });
       if (uploadError) throw uploadError;
+
 
       const { data: urlData } = db.storage.from('avatars').getPublicUrl(path);
       const publicUrl = urlData.publicUrl;
@@ -560,9 +641,11 @@ export default function App() {
 
       setProfile(prev => ({ ...prev, avatar_url: publicUrl }));
       showToast('Avatar updated!', 'success');
-    } catch {
+    } catch (err) {
+      console.error('Avatar upload error:', err);
       showToast('Failed to upload avatar. Try again.', 'error');
     } finally {
+
       setIsUploadingAvatar(false);
     }
   };
@@ -582,10 +665,12 @@ export default function App() {
       btn.style.animation = 'starPop 0.3s ease';
     }
     try {
-      const db = await import('./supabaseClient').then(m => m.getSupabase(getToken));
+      const db = await getSupabase();
       const { error } = await db.from('entries').update({ starred: newStarredStatus }).eq('id', entryToToggle.id);
       if (error) throw error;
-    } catch {
+    } catch (err) {
+      console.error('Toggle star error:', err);
+
       // Revert on error
       setEntries(prev => prev.map(en => en.id === entryToToggle.id ? { ...en, starred: !newStarredStatus } : en));
       if (selectedEntry?.id === entryToToggle.id) {
@@ -598,15 +683,17 @@ export default function App() {
   const handleDelete = async () => {
     setIsDeleting(true);
     try {
-      const db = await import('./supabaseClient').then(m => m.getSupabase(getToken));
+      const db = await getSupabase();
       const { error } = await db.from('entries').delete().eq('id', selectedEntry.id);
       if (error) throw error;
       setEntries(prev => prev.filter(e => e.id !== selectedEntry.id));
       setSelectedEntry(null);
       setShowDeleteConfirm(false);
-    } catch {
+    } catch (err) {
+      console.error('Delete error:', err);
       showToast('Delete failed. Try again.', 'error');
     } finally {
+
       setIsDeleting(false);
     }
   };
@@ -621,52 +708,60 @@ export default function App() {
       return;
     }
     setIsSaving(true);
-    const parsedTags = formTags
-      ? formTags.split(',').map(t => t.trim()).filter(Boolean)
-      : [];
-
-    let imageUrl = null;
-    if (imageFile) {
-      // Validate file type
-      if (!['image/jpeg', 'image/png', 'image/webp'].includes(imageFile.type)) {
-        showToast('Only JPEG, PNG, or WebP images are allowed.', 'error');
-        setIsSaving(false);
-        return;
-      }
-      // Validate file size (5MB)
-      if (imageFile.size > 5 * 1024 * 1024) {
-        showToast('Image must be under 5MB.', 'error');
-        setIsSaving(false);
-        return;
-      }
-      try {
-        const fileName = `${Date.now()}-${Math.random().toString(36).substring(7)}.jpg`;
-        const { data: uploadData, error: uploadError } = await supabase.storage
-          .from('entry-images')
-          .upload(fileName, imageFile, { contentType: imageFile.type });
-        if (uploadError) throw uploadError;
-        const { data: urlData } = supabase.storage.from('entry-images').getPublicUrl(fileName);
-        imageUrl = urlData?.publicUrl || null;
-      } catch {
-        showToast('Image upload failed. Saving without image.', 'error');
-      }
-    }
-
-    const newEntry = {
-      user_id: user.id,
-      question: formQuestion.trim(),
-      answer: formAnswer.trim(),
-      subject: formSubject,
-      chapter: formChapter.trim() || null,
-      tags: parsedTags,
-      starred: false,
-      image_url: imageUrl,
-    };
-
+    
     try {
-      const db = await import('./supabaseClient').then(m => m.getSupabase(getToken));
-      const { data, error } = await db.from('entries').insert([newEntry]).select();
+      const db = await getSupabase();
+      const parsedTags = formTags
+        ? formTags.split(',').map(t => t.trim()).filter(Boolean)
+        : [];
+
+      let imageUrl = null;
+      if (imageFile) {
+        // Validate file type
+        const allowed = ['image/jpeg', 'image/png', 'image/webp'];
+        if (!allowed.includes(imageFile.type)) {
+          showToast('Only JPEG, PNG, or WebP allowed', 'error');
+          setIsSaving(false);
+          return;
+        }
+        // Validate file size (5MB)
+        if (imageFile.size > 5 * 1024 * 1024) {
+          showToast('Image must be under 5MB', 'error');
+          setIsSaving(false);
+          return;
+        }
+
+        try {
+          const fileName = `${Date.now()}-${Math.random().toString(36).substring(7)}.jpg`;
+          const { error: uploadError } = await db.storage
+            .from('entry-images')
+            .upload(fileName, imageFile, { contentType: imageFile.type });
+          
+          if (uploadError) throw uploadError;
+          
+          const { data: urlData } = db.storage.from('entry-images').getPublicUrl(fileName);
+          imageUrl = urlData?.publicUrl || null;
+        } catch (err) {
+          console.error('Upload error:', err);
+          showToast('Image upload failed. Saving without image.', 'error');
+        }
+      }
+
+      const newEntry = {
+        question: formQuestion.trim(),
+        answer: formAnswer.trim(),
+        subject: formSubject,
+        chapter: formChapter.trim() || null,
+        tags: parsedTags,
+        user_id: userId,
+        starred: false,
+        is_public: false,
+      };
+
+      const { data, error } = await db.from('entries').insert(newEntry).select();
+      
       if (error) throw error;
+      
       if (data && data.length > 0) {
         setEntries(prev => [data[0], ...prev]);
         showToast('✓ Saved to your vault!', 'success');
@@ -674,12 +769,14 @@ export default function App() {
         setFormAnswer(''); setFormTags(''); setImageFile(null); setImagePreview(null);
         setAddStep(1); setShowAddEntry(false);
       }
-    } catch {
+    } catch (err) {
+      console.error('Save error:', err);
       showToast('Something went wrong. Try again.', 'error');
     } finally {
       setIsSaving(false);
     }
   };
+
 
   const handleMarkReviewed = async (entry) => {
     // Optimistic update
@@ -691,16 +788,18 @@ export default function App() {
       const s = new Set(prev); s.delete(entry.id); return s;
     });
     try {
-      const db = await import('./supabaseClient').then(m => m.getSupabase(getToken));
+      const db = await getSupabase();
       const { error } = await db.from('entries').update({
         review_count: (entry.review_count || 0) + 1,
         last_reviewed: new Date().toISOString()
       }).eq('id', entry.id);
       if (error) throw error;
       showToast('Review saved! ✓', 'success');
-    } catch {
+    } catch (err) {
+      console.error('Mark reviewed error:', err);
       showToast('Could not save review. Try again.', 'error');
     }
+
   };
 
   const handleReviewAgain = (entry) => {
@@ -835,28 +934,54 @@ export default function App() {
                   {profile?.display_name || user?.firstName || 'User'} <span style={{ fontWeight: 400, marginLeft: '4px' }}>👋</span>
                 </div>
               </div>
-              <div 
-                onClick={() => setCurrentTab('Profile')}
-                style={{
-                  width: '40px',
-                  height: '40px',
-                  borderRadius: '50%',
-                  backgroundColor: COLORS.primaryLight,
-                  color: COLORS.primary,
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                  fontWeight: 'bold',
-                  fontSize: '18px',
-                  overflow: 'hidden',
-                  cursor: 'pointer'
-                }}>
-                {(profile?.avatar_url || user?.imageUrl) ? (
-                  <img src={profile?.avatar_url || user?.imageUrl} alt="Avatar" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
-                ) : (profile?.display_name || user?.firstName || 'U')[0].toUpperCase()}
+              <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+                <button
+                  onClick={() => {
+                    setIsSearchVisible(!isSearchVisible);
+                    if (!isSearchVisible) setTimeout(() => searchInputRef.current?.focus(), 100);
+                  }}
+                  style={{
+                    width: '40px',
+                    height: '40px',
+                    borderRadius: '50%',
+                    backgroundColor: isSearchVisible ? COLORS.primary : COLORS.cardSurface,
+                    color: isSearchVisible ? '#FFF' : COLORS.textMuted,
+                    border: 'none',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    cursor: 'pointer',
+                    boxShadow: '0 2px 8px rgba(0,0,0,0.05)',
+                    transition: 'all 0.2s ease'
+                  }}
+                >
+                  <ICONS.Search />
+                </button>
+                <div 
+                  onClick={() => setCurrentTab('Profile')}
+                  style={{
+                    width: '40px',
+                    height: '40px',
+                    borderRadius: '50%',
+                    backgroundColor: COLORS.primaryLight,
+                    color: COLORS.primary,
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    fontWeight: 'bold',
+                    fontSize: '18px',
+                    overflow: 'hidden',
+                    cursor: 'pointer'
+                  }}>
+                  {(profile?.avatar_url || user?.imageUrl) ? (
+                    <img src={profile?.avatar_url || user?.imageUrl} alt="Avatar" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                  ) : (profile?.display_name || user?.firstName || 'U')[0].toUpperCase()}
+                </div>
               </div>
             </div>
           )}
+
+
 
           {/* 2. PROFILE VIEW */}
           {currentTab === 'Profile' && (
@@ -917,6 +1042,8 @@ export default function App() {
                 {isEditingName ? (
                   <div style={{ display: 'flex', gap: '8px', marginBottom: '8px' }}>
                     <input 
+                      id="profile-name"
+                      name="display_name"
                       value={tempName} 
                       onChange={e => setTempName(e.target.value)}
                       style={{ border: 'none', backgroundColor: COLORS.bg, borderRadius: '8px', padding: '4px 12px', textAlign: 'center', fontSize: '18px', fontWeight: '600', fontFamily: 'inherit' }}
@@ -935,6 +1062,8 @@ export default function App() {
                 {isEditingBio ? (
                   <div style={{ width: '100%', display: 'flex', flexDirection: 'column', gap: '8px' }}>
                     <textarea 
+                      id="profile-bio"
+                      name="bio"
                       value={tempBio} 
                       onChange={e => setTempBio(e.target.value)}
                       placeholder="Tell your classmates about yourself..."
@@ -971,10 +1100,18 @@ export default function App() {
                 ))}
               </div>
 
-              {/* Settings Section */}
               <div style={{ backgroundColor: COLORS.cardSurface, borderRadius: '24px', overflow: 'hidden', boxShadow: COLORS.shadow }}>
                 <SettingRow icon="🔑" label="Change Password" onClick={() => setShowClerkSettings(true)} />
-                <SettingRow icon="🔔" label="Notification Preferences" hasToggle toggleValue={svNotifs} onToggle={() => {
+                <SettingRow icon="📝" label={`My Review Queue (${reviewQueue.length})`} onClick={() => setCurrentTab('Review')} />
+                <SettingRow icon="🔔" label="Notification Status" onClick={() => {
+                  if (Notification.permission === 'default') requestNotificationPermission();
+                }}>
+                  <div style={{ fontSize: '12px', fontWeight: '600', color: Notification.permission === 'granted' ? COLORS.green : '#FF5252' }}>
+                    {Notification.permission === 'granted' ? (svNotifs ? 'ENABLED' : 'MUTED') : Notification.permission.toUpperCase()}
+                  </div>
+                </SettingRow>
+                <SettingRow icon="📲" label="Test Push Notification" onClick={sendTestNotification} />
+                <SettingRow icon="🔕" label="Mute Notifications" hasToggle toggleValue={!svNotifs} onToggle={() => {
                   const next = !svNotifs;
                   setSvNotifs(next);
                   localStorage.setItem('sv_notifs_enabled', next);
@@ -987,6 +1124,7 @@ export default function App() {
               </div>
             </div>
           )}
+
 
           {/* 3. CLASS FEED VIEW */}
           {currentTab === 'Feed' && (
@@ -1004,6 +1142,8 @@ export default function App() {
               {/* Feed Search */}
               <div style={{ position: 'relative' }}>
                 <input 
+                  id="feed-search"
+                  name="feed-search"
                   type="text" 
                   placeholder="Search the feed..." 
                   value={feedSearch}
@@ -1111,9 +1251,11 @@ export default function App() {
                         await markAsRead(notif.id);
                         if (notif.entry_id) {
                           // Fetch entry detail and open it
-                          const { data: entryData } = await supabase.from('entries').select('*').eq('id', notif.entry_id).single();
+                          const db = await getSupabase();
+                          const { data: entryData } = await db.from('entries').select('*').eq('id', notif.entry_id).single();
                           if (entryData) setSelectedEntry(entryData);
                         }
+
                       }}
                       style={{
                         backgroundColor: notif.is_read ? COLORS.cardSurface : COLORS.primaryLight,
@@ -1155,8 +1297,9 @@ export default function App() {
             </div>
           )}
 
-          {/* 4. SEARCH BAR (Hidden on Profile or Feed) */}
-          {currentTab !== 'Profile' && currentTab !== 'Feed' && (
+          {/* 4. SEARCH BAR (Shown on Home when toggled or on Feed) */}
+          {((currentTab === 'Home' && isSearchVisible) || (currentTab === 'Feed')) && (
+
             <div style={{ position: 'relative' }}>
               <span style={{ 
                 position: 'absolute', 
@@ -1170,6 +1313,8 @@ export default function App() {
                 <ICONS.Search />
               </span>
               <input 
+                id="home-search"
+                name="home-search"
                 ref={searchInputRef}
                 type="text" 
                 placeholder="Search your questions..." 
@@ -1903,58 +2048,91 @@ export default function App() {
                   </p>
                 </div>
 
-                {/* Share to Feed Button (Owner Only) */}
+                {/* Share to Feed Section (Owner Only) */}
                 {selectedEntry.user_id === user.id && (
-                  <div style={{ marginTop: '20px' }}>
+                  <div style={{ marginTop: '24px', display: 'flex', flexDirection: 'column', gap: '12px' }}>
                     {selectedEntry.is_public ? (
-                      <button
-                        onClick={() => handleRemoveFromFeed(selectedEntry)}
-                        disabled={isSharing}
-                        style={{
-                          width: '100%',
-                          backgroundColor: 'transparent',
-                          color: '#FF5252',
-                          border: '1.5px solid #FF5252',
-                          borderRadius: '12px',
-                          padding: '12px',
-                          fontSize: '13px',
-                          fontWeight: '600',
-                          fontFamily: 'inherit',
-                          cursor: 'pointer',
+                      <>
+                        <div style={{ 
+                          backgroundColor: '#E8F5E9', 
+                          border: `1px solid ${COLORS.green}`, 
+                          borderRadius: '12px', 
+                          padding: '12px 16px',
                           display: 'flex',
                           alignItems: 'center',
-                          justifyContent: 'center',
-                          gap: '8px'
-                        }}
-                      >
-                        {isSharing ? <span className="spinner"></span> : 'Remove from Class Feed'}
-                      </button>
+                          gap: '10px'
+                        }}>
+                          <span style={{ fontSize: '18px' }}>✅</span>
+                          <span style={{ fontSize: '13px', color: COLORS.green, fontWeight: '600' }}>
+                            Shared — classmates can see this
+                          </span>
+                        </div>
+                        <button
+                          onClick={() => handleRemoveFromFeed(selectedEntry)}
+                          disabled={isSharing}
+                          style={{
+                            width: '100%',
+                            backgroundColor: 'transparent',
+                            color: '#FF5252',
+                            border: '1.5px solid #FF5252',
+                            borderRadius: '12px',
+                            padding: '12px',
+                            fontSize: '13px',
+                            fontWeight: '600',
+                            fontFamily: 'inherit',
+                            cursor: 'pointer',
+                            display: 'flex',
+                            alignItems: 'center',
+                            justifyContent: 'center',
+                            gap: '8px'
+                          }}
+                        >
+                          {isSharing ? <span className="spinner"></span> : 'Remove from Feed'}
+                        </button>
+                      </>
                     ) : (
-                      <button
-                        onClick={() => handleShareToFeed(selectedEntry)}
-                        disabled={isSharing}
-                        style={{
-                          width: '100%',
-                          backgroundColor: 'transparent',
-                          color: COLORS.primary,
-                          border: `1.5px solid ${COLORS.primary}`,
-                          borderRadius: '12px',
-                          padding: '12px',
-                          fontSize: '13px',
-                          fontWeight: '600',
-                          fontFamily: 'inherit',
-                          cursor: 'pointer',
+                      <>
+                        <div style={{ 
+                          backgroundColor: '#F0F2F5', 
+                          borderRadius: '12px', 
+                          padding: '12px 16px',
                           display: 'flex',
                           alignItems: 'center',
-                          justifyContent: 'center',
-                          gap: '8px'
-                        }}
-                      >
-                        {isSharing ? <span className="spinner"></span> : 'Share to Class Feed 🌎'}
-                      </button>
+                          gap: '10px'
+                        }}>
+                          <span style={{ fontSize: '18px' }}>🔒</span>
+                          <span style={{ fontSize: '13px', color: COLORS.textMuted, fontWeight: '600' }}>
+                            Private — only you can see this
+                          </span>
+                        </div>
+                        <button
+                          onClick={() => handleShareToFeed(selectedEntry)}
+                          disabled={isSharing}
+                          style={{
+                            width: '100%',
+                            backgroundColor: COLORS.primary,
+                            color: '#fff',
+                            border: 'none',
+                            borderRadius: '12px',
+                            padding: '12px',
+                            fontSize: '14px',
+                            fontWeight: '600',
+                            fontFamily: 'inherit',
+                            cursor: 'pointer',
+                            display: 'flex',
+                            alignItems: 'center',
+                            justifyContent: 'center',
+                            gap: '8px',
+                            boxShadow: '0 4px 12px rgba(33,150,243,0.3)'
+                          }}
+                        >
+                          {isSharing ? <span className="spinner"></span> : 'Share to Class Feed'}
+                        </button>
+                      </>
                     )}
                   </div>
                 )}
+
               </div>
 
               {/* Image below answer, if present */}
@@ -2167,10 +2345,12 @@ export default function App() {
               // STEP 1 CONTENT
               <div style={{ display: 'flex', flexDirection: 'column', gap: '24px', animation: 'fadeIn 0.3s ease' }}>
                 <div>
-                  <label style={{ display: 'block', fontSize: '12px', fontWeight: '600', color: COLORS.textMuted, marginBottom: '8px', textTransform: 'uppercase', letterSpacing: '1px' }}>
+                  <label htmlFor="entry-question" style={{ display: 'block', fontSize: '12px', fontWeight: '600', color: COLORS.textMuted, marginBottom: '8px', textTransform: 'uppercase', letterSpacing: '1px' }}>
                     Question
                   </label>
                   <textarea 
+                    id="entry-question"
+                    name="question"
                     value={formQuestion}
                     onChange={(e) => setFormQuestion(e.target.value)}
                     placeholder="What question came up while studying?"
@@ -2225,10 +2405,12 @@ export default function App() {
                 </div>
 
                 <div>
-                  <label style={{ display: 'block', fontSize: '12px', fontWeight: '600', color: COLORS.textMuted, marginBottom: '8px', textTransform: 'uppercase', letterSpacing: '1px' }}>
+                  <label htmlFor="entry-chapter" style={{ display: 'block', fontSize: '12px', fontWeight: '600', color: COLORS.textMuted, marginBottom: '8px', textTransform: 'uppercase', letterSpacing: '1px' }}>
                     Chapter (Optional)
                   </label>
                   <input 
+                    id="entry-chapter"
+                    name="chapter"
                     type="text"
                     value={formChapter}
                     onChange={(e) => setFormChapter(e.target.value)}
@@ -2295,10 +2477,12 @@ export default function App() {
                 </div>
 
                 <div style={{ flex: 1, display: 'flex', flexDirection: 'column' }}>
-                  <label style={{ display: 'block', fontSize: '12px', fontWeight: '600', color: COLORS.textMuted, marginBottom: '8px', textTransform: 'uppercase', letterSpacing: '1px' }}>
+                  <label htmlFor="entry-answer" style={{ display: 'block', fontSize: '12px', fontWeight: '600', color: COLORS.textMuted, marginBottom: '8px', textTransform: 'uppercase', letterSpacing: '1px' }}>
                     Answer
                   </label>
                   <textarea 
+                    id="entry-answer"
+                    name="answer"
                     value={formAnswer}
                     onChange={(e) => setFormAnswer(e.target.value)}
                     placeholder="Paste your refined answer here..."
@@ -2327,10 +2511,12 @@ export default function App() {
                 </div>
 
                 <div>
-                  <label style={{ display: 'block', fontSize: '12px', fontWeight: '600', color: COLORS.textMuted, marginBottom: '8px', textTransform: 'uppercase', letterSpacing: '1px' }}>
+                  <label htmlFor="entry-tags" style={{ display: 'block', fontSize: '12px', fontWeight: '600', color: COLORS.textMuted, marginBottom: '8px', textTransform: 'uppercase', letterSpacing: '1px' }}>
                     Tags (Optional)
                   </label>
                   <input 
+                    id="entry-tags"
+                    name="tags"
                     type="text"
                     value={formTags}
                     onChange={(e) => setFormTags(e.target.value)}
@@ -2404,13 +2590,21 @@ export default function App() {
                         <span>Tap to attach a photo</span>
                       </div>
                       <input
+                        id="entry-image"
+                        name="image"
                         type="file"
-                        accept="image/*"
-                        capture="environment"
+                        accept="image/jpeg,image/png,image/webp"
                         style={{ display: 'none' }}
                         onChange={(e) => {
                           const file = e.target.files?.[0];
                           if (file) {
+                            if (file.size > 5 * 1024 * 1024) {
+                              showToast('Image must be under 5MB', 'error'); return;
+                            }
+                            const allowed = ['image/jpeg', 'image/png', 'image/webp'];
+                            if (!allowed.includes(file.type)) {
+                              showToast('Only JPEG, PNG, or WebP allowed', 'error'); return;
+                            }
                             setImageFile(file);
                             setImagePreview(URL.createObjectURL(file));
                           }
@@ -2579,26 +2773,27 @@ export default function App() {
         transform: 'translateX(-50%)',
         width: '100%',
         maxWidth: '480px',
-        backgroundColor: COLORS.cardSurface,
+        height: '64px',
+        backgroundColor: 'rgba(255, 255, 255, 0.95)',
+        backdropFilter: 'blur(10px)',
         borderTop: `1px solid #E3E8EE`,
         display: 'flex',
         justifyContent: 'space-around',
-        padding: '12px 20px max(12px, env(safe-area-inset-bottom))',
+        alignItems: 'center',
+        padding: '0 10px env(safe-area-inset-bottom)',
         zIndex: 40,
         boxShadow: '0 -4px 16px rgba(0,0,0,0.05)'
       }}>
         {[
-           { id: 'Home', icon: ICONS.Home },
+          { id: 'Home', icon: ICONS.Home },
           { id: 'Feed', icon: ICONS.Feed },
-          { id: 'Notifs', icon: ICONS.Bell, badge: unreadCount },
-          { id: 'Add', icon: () => <span style={{ fontSize: '24px', lineHeight: '1', fontWeight: '300' }}>+</span>, isAction: true },
-          { id: 'Review', icon: ICONS.Review, badge: reviewQueue.length },
-          { id: 'Search', icon: ICONS.Search },
+          { id: 'Add', icon: () => <span style={{ fontSize: '28px', lineHeight: '1', fontWeight: '300' }}>+</span>, isAction: true },
+          { id: 'Notifs', icon: ICONS.Bell, badge: unreadCount, label: 'Notifications' },
           { id: 'Profile', icon: ICONS.Profile }
         ].map(tab => {
           if (tab.isAction) {
             return (
-              <div key={tab.id} style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'flex-start' }}>
+              <div key={tab.id} style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', width: '20%' }}>
                 <button
                   onClick={() => setShowAddEntry(true)}
                   style={{
@@ -2613,15 +2808,15 @@ export default function App() {
                     cursor: 'pointer',
                     color: '#fff',
                     boxShadow: '0 8px 24px rgba(33,150,243,0.3)',
-                    transform: 'translateY(-20px)',
+                    transform: 'translateY(-12px)',
                     transition: 'transform 0.2s ease, box-shadow 0.2s ease',
                   }}
                   onMouseOver={(e) => {
-                    e.currentTarget.style.transform = 'translateY(-22px) scale(1.05)';
+                    e.currentTarget.style.transform = 'translateY(-14px) scale(1.05)';
                     e.currentTarget.style.boxShadow = '0 12px 28px rgba(33,150,243,0.4)';
                   }}
                   onMouseOut={(e) => {
-                    e.currentTarget.style.transform = 'translateY(-20px) scale(1)';
+                    e.currentTarget.style.transform = 'translateY(-12px) scale(1)';
                     e.currentTarget.style.boxShadow = '0 8px 24px rgba(33,150,243,0.3)';
                   }}
                 >
@@ -2637,8 +2832,8 @@ export default function App() {
               key={tab.id}
               onClick={() => {
                 setCurrentTab(tab.id);
-                if (tab.id === 'Search') {
-                  setTimeout(() => searchInputRef.current?.focus(), 100);
+                if (tab.id === 'Home') {
+                  // Keep search visible if it was open, or let user toggle it
                 }
               }}
               style={{
@@ -2647,55 +2842,56 @@ export default function App() {
                 display: 'flex',
                 flexDirection: 'column',
                 alignItems: 'center',
-                gap: '4px',
+                justifyContent: 'center',
+                gap: '2px',
                 color: isActive ? COLORS.primary : COLORS.textMuted,
                 cursor: 'pointer',
                 fontFamily: "'Poppins', sans-serif",
-                flex: 1
+                width: '20%',
+                height: '100%',
+                padding: '0'
               }}
             >
               <div style={{
-                padding: '8px 20px',
-                borderRadius: '20px',
-                backgroundColor: isActive ? COLORS.primaryLight : 'transparent',
-                transition: 'all 0.2s ease',
+                position: 'relative',
                 display: 'flex',
                 alignItems: 'center',
                 justifyContent: 'center',
-                position: 'relative'
+                padding: '4px'
               }}>
                 <tab.icon />
                 {tab.badge > 0 && (
                   <div style={{
                     position: 'absolute',
-                    top: '2px',
-                    right: '8px',
+                    top: '-2px',
+                    right: '-4px',
                     backgroundColor: '#FF5252',
                     color: '#FFF',
-                    fontSize: '10px',
+                    fontSize: '9px',
                     fontWeight: 'bold',
                     borderRadius: '10px',
-                    minWidth: '16px',
-                    height: '16px',
+                    minWidth: '14px',
+                    height: '14px',
                     display: 'flex',
                     alignItems: 'center',
                     justifyContent: 'center',
                     lineHeight: '1',
                     boxShadow: '0 2px 4px rgba(255,82,82,0.3)',
-                    padding: '0 4px',
+                    padding: '0 3px',
                     zIndex: 2
                   }}>
                     {tab.badge}
                   </div>
                 )}
               </div>
-              <span style={{ fontSize: '11px', fontWeight: isActive ? '600' : '500' }}>
-                {tab.id}
+              <span style={{ fontSize: '10px', fontWeight: isActive ? '600' : '500' }}>
+                {tab.label || tab.id}
               </span>
             </button>
           )
         })}
       </div>
+
 
       {/* CLERK USER PROFILE SETTINGS OVERLAY */}
       {showClerkSettings && (
