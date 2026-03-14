@@ -1,0 +1,161 @@
+@import url('https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&display=swap');
+
+/* ============================
+   RESET & BASE
+   ============================ */
+*, *::before, *::after {
+  box-sizing: border-box;
+  -webkit-tap-highlight-color: transparent;
+}
+
+body {
+  margin: 0;
+  padding: 0;
+  background-color: #F5F7FA;
+  font-family: 'Poppins', sans-serif;
+  color: #37474F;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  /* Prevent horizontal overflow on mobile */
+  overflow-x: hidden;
+  /* Prevent text size adjustment on orientation change */
+  -webkit-text-size-adjust: 100%;
+}
+
+/* ============================
+   MOBILE RESPONSIVE INPUTS
+   (font-size: 16px prevents iOS zoom)
+   ============================ */
+input, textarea, select {
+  font-size: 16px !important;
+  font-family: 'Poppins', sans-serif;
+}
+
+textarea {
+  resize: none;
+}
+
+/* ============================
+   SCROLLBAR UTILITIES
+   ============================ */
+.hide-scrollbar::-webkit-scrollbar {
+  display: none;
+}
+.hide-scrollbar {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
+
+/* ============================
+   ANIMATIONS
+   ============================ */
+@keyframes shimmer {
+  0%   { background-position: 200% 0; }
+  100% { background-position: -200% 0; }
+}
+
+@keyframes spin {
+  from { transform: rotate(0deg); }
+  to   { transform: rotate(360deg); }
+}
+
+@keyframes fadeInUp {
+  from { opacity: 0; transform: translateY(10px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes starPop {
+  0%   { transform: scale(1); }
+  50%  { transform: scale(1.4); }
+  100% { transform: scale(1); }
+}
+
+@keyframes slideUp {
+  from { transform: translateY(100%); opacity: 0; }
+  to   { transform: translateY(0);    opacity: 1; }
+}
+
+/* ============================
+   ANIMATION CLASSES
+   ============================ */
+.animate-fade-in-up {
+  opacity: 0;
+  animation: fadeInUp 0.4s ease forwards;
+}
+
+.star-pop {
+  animation: starPop 0.3s ease;
+}
+
+/* ============================
+   SPINNER
+   ============================ */
+.spinner {
+  width: 16px;
+  height: 16px;
+  border: 2px solid rgba(255, 255, 255, 0.35);
+  border-radius: 50%;
+  border-top-color: #fff;
+  animation: spin 0.8s linear infinite;
+  display: inline-block;
+  vertical-align: middle;
+}
+
+.spinner-blue {
+  width: 20px;
+  height: 20px;
+  border: 2px solid rgba(33, 150, 243, 0.25);
+  border-radius: 50%;
+  border-top-color: #2196F3;
+  animation: spin 0.8s linear infinite;
+  display: inline-block;
+  vertical-align: middle;
+}
+
+/* ============================
+   TOUCH TARGETS
+   ============================ */
+button, a, [role="button"] {
+  min-height: 44px;
+  min-width: 44px;
+}
+
+/* ============================
+   WORD BREAK (prevents layout break on long text)
+   ============================ */
+.answer-text {
+  word-break: break-word;
+  overflow-wrap: break-word;
+  white-space: pre-wrap;
+}
+
+/* ============================
+   IMAGES — prevent overflow
+   ============================ */
+img {
+  max-width: 100%;
+  height: auto;
+}
+
+/* ============================
+   ACCESSIBILITY FOCUS RING
+   ============================ */
+:focus-visible {
+  outline: 2px solid #2196F3;
+  outline-offset: 2px;
+}
+
+/* ============================
+   SAFE AREA BOTTOM PADDING CLASS
+   ============================ */
+.safe-bottom-pad {
+  padding-bottom: calc(88px + env(safe-area-inset-bottom, 0px));
+}
+
+/* ============================
+   SCROLLABLE MODAL / OVERLAY
+   ============================ */
+.modal-scroll {
+  overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
+}
