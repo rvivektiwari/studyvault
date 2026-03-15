@@ -289,6 +289,7 @@ export default function App() {
 
 
   const notifyAllUsers = useCallback(async (fromUserId, entryId, message, type = 'new_feed_post') => {
+    if (!fromUserId) return; // CRITICAL: prevent sending if user ID is undefined
     try {
       const db = supabase;
       const { data: allProfiles } = await db
@@ -765,10 +766,12 @@ export default function App() {
             const notif = payload.new;
             setUnreadCount(prev => prev + 1);
             showToast(notif.message, 'info');
-            if (Notification.permission === 'granted' && svNotifs) {
+            if (Notification.permission === 'granted') {
               new Notification('StudyVault', {
                 body: notif.message,
-                icon: '/web-app-manifest-192x192.png'
+                icon: '/web-app-manifest-192x192.png',
+                tag: 'studyvault-notif',
+                renotify: true,
               });
             }
             if (navigator.vibrate) navigator.vibrate(200);
@@ -1240,9 +1243,8 @@ export default function App() {
         </div>
       )}
       <SignedIn>
-        <div style={{
+        <div className="bg-bgsoft" style={{
           minHeight: '100vh',
-          backgroundColor: COLORS.bg,
           fontFamily: "'Poppins', sans-serif",
           color: COLORS.textPrimary,
           position: 'relative',
@@ -1486,6 +1488,37 @@ export default function App() {
                     {Notification.permission === 'granted' ? (svNotifs ? 'ENABLED' : 'MUTED') : Notification.permission.toUpperCase()}
                   </div>
                 </SettingRow>
+                {/* Enable Browser Notifications button — shown only when not yet granted */}
+                {Notification.permission !== 'granted' && (
+                  <div style={{ padding: '12px 16px', borderBottom: '1px solid #F0F2F5' }}>
+                    <button
+                      onClick={requestNotificationPermission}
+                      className="no-select"
+                      style={{
+                        width: '100%',
+                        backgroundColor: COLORS.primary,
+                        color: '#FFF',
+                        border: 'none',
+                        borderRadius: '12px',
+                        padding: '12px 16px',
+                        fontSize: '14px',
+                        fontWeight: '600',
+                        fontFamily: 'inherit',
+                        cursor: 'pointer',
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        gap: '8px',
+                        boxShadow: '0 4px 12px rgba(37,99,235,0.25)',
+                        transition: 'transform 0.15s ease, box-shadow 0.15s ease'
+                      }}
+                      onMouseOver={e => { e.currentTarget.style.transform = 'scale(0.98)'; }}
+                      onMouseOut={e => { e.currentTarget.style.transform = 'scale(1)'; }}
+                    >
+                      🔔 Enable Browser Notifications
+                    </button>
+                  </div>
+                )}
                 <SettingRow icon={ICONS.Bell} label="Test Push Notification" onClick={sendTestNotification} />
                 <SettingRow icon={ICONS.BellOff} label="Mute Notifications" hasToggle toggleValue={!svNotifs} onToggle={() => {
                   const next = !svNotifs;
@@ -1758,20 +1791,20 @@ export default function App() {
                   <button
                     key={subject}
                     onClick={() => setSelectedSubject(subject)}
+                    className={`no-select transition ${
+                      isSelected
+                        ? 'bg-primary text-white font-semibold'
+                        : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
+                    }`}
                     style={{
                       whiteSpace: 'nowrap',
                       flexShrink: 0,
-                      padding: '0 20px',
-                      height: '36px',
-                      borderRadius: '8px',
-                      backgroundColor: isSelected ? COLORS.primary : COLORS.cardSurface,
-                      border: isSelected ? 'none' : `1px solid ${COLORS.primary}`,
-                      color: isSelected ? '#fff' : COLORS.primary,
+                      padding: '6px 16px',
+                      borderRadius: '9999px',
+                      border: 'none',
                       fontFamily: 'inherit',
                       fontSize: '13px',
-                      fontWeight: isSelected ? '600' : '500',
                       cursor: 'pointer',
-                      transition: 'all 0.2s ease',
                       outline: 'none'
                     }}
                   >
@@ -1921,17 +1954,16 @@ export default function App() {
                 // List Entries
                 filteredEntries.map((entry, idx) => (
                   <div 
-                    className="animate-fade-in-up"
+                    className="animate-fade-in-up border border-borderSoft shadow-soft"
                     key={entry.id} 
                     onClick={() => setSelectedEntry(entry)}
                     style={{
                       animationDelay: `${idx * 50}ms`,
                       backgroundColor: COLORS.cardSurface,
-                      borderRadius: '20px',
+                      borderRadius: '18px',
                       padding: '20px',
                       cursor: 'pointer',
                       position: 'relative',
-                      boxShadow: COLORS.shadow,
                       transition: 'transform 0.15s ease, box-shadow 0.15s ease'
                     }}
                     onMouseOver={(e) => {
@@ -3422,23 +3454,23 @@ export default function App() {
       </div>
 
       {/* BOTTOM NAVIGATION BAR */}
-      <div style={{
+      <div className="no-select" style={{
         position: 'fixed',
         bottom: 0,
         left: '50%',
         transform: 'translateX(-50%)',
         width: '100%',
         maxWidth: '480px',
-        height: '64px',
-        backgroundColor: 'rgba(255, 255, 255, 0.95)',
-        backdropFilter: 'blur(10px)',
-        borderTop: `1px solid #E3E8EE`,
+        backgroundColor: 'rgba(255, 255, 255, 0.97)',
+        backdropFilter: 'blur(12px)',
+        borderTopLeftRadius: '30px',
+        borderTopRightRadius: '30px',
         display: 'flex',
         justifyContent: 'space-around',
         alignItems: 'center',
-        padding: '0 10px env(safe-area-inset-bottom)',
+        padding: `10px 10px max(env(safe-area-inset-bottom), 8px)`,
         zIndex: 40,
-        boxShadow: '0 -4px 16px rgba(0,0,0,0.05)'
+        boxShadow: '0 -6px 24px rgba(0,0,0,0.08)'
       }}>
         {[
           { id: 'Home', icon: ICONS.Home },
@@ -3492,6 +3524,7 @@ export default function App() {
                   // Keep search visible if it was open, or let user toggle it
                 }
               }}
+              className="no-select"
               style={{
                 background: 'none',
                 border: 'none',
@@ -3500,7 +3533,7 @@ export default function App() {
                 alignItems: 'center',
                 justifyContent: 'center',
                 gap: '2px',
-                color: isActive ? '#2196F3' : '#90A4AE',
+                color: isActive ? '#2563EB' : '#90A4AE',
                 cursor: 'pointer',
                 fontFamily: "'Poppins', sans-serif",
                 width: '20%',

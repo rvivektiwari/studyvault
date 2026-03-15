@@ -1,25 +1,36 @@
-@import url('https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&display=swap');
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
 
-/* ============================
-   RESET & BASE
-   ============================ */
-*, *::before, *::after {
-  box-sizing: border-box;
-  -webkit-tap-highlight-color: transparent;
+@layer base {
+  *, *::before, *::after {
+    box-sizing: border-box;
+    -webkit-tap-highlight-color: transparent;
+  }
+
+  html {
+    font-family: 'Poppins', system-ui, sans-serif;
+    background: #F8FAFC;
+  }
+
+  body {
+    color: #1f2937;
+    margin: 0;
+    padding: 0;
+    font-family: 'Poppins', sans-serif;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+    /* Prevent horizontal overflow on mobile */
+    overflow-x: hidden;
+    /* Prevent text size adjustment on orientation change */
+    -webkit-text-size-adjust: 100%;
+  }
 }
 
-body {
-  margin: 0;
-  padding: 0;
-  background-color: #F5F7FA;
-  font-family: 'Poppins', sans-serif;
-  color: #37474F;
-  -webkit-font-smoothing: antialiased;
-  -moz-osx-font-smoothing: grayscale;
-  /* Prevent horizontal overflow on mobile */
-  overflow-x: hidden;
-  /* Prevent text size adjustment on orientation change */
-  -webkit-text-size-adjust: 100%;
+@layer utilities {
+  .no-select {
+    user-select: none;
+  }
 }
 
 /* ============================
