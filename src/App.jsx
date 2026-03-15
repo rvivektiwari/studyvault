@@ -1,6 +1,37 @@
 import { useState, useEffect, useCallback, useRef } from 'react';
 
 import { 
+  Home, 
+  Rss, 
+  Plus, 
+  Bell, 
+  User, 
+  BookOpen, 
+  Search, 
+  Trash2, 
+  Camera, 
+  Share2, 
+  Lock, 
+  Check, 
+  Settings, 
+  Pencil, 
+  Globe, 
+  RefreshCw, 
+  ArrowLeft, 
+  X, 
+  Lightbulb, 
+  Star,
+  ChevronUp,
+  Award,
+  ChevronRight,
+  LogOut,
+  BellOff,
+  Moon,
+  AlertTriangle,
+  FolderOpen
+} from 'lucide-react';
+
+import { 
   SignedIn, 
   SignedOut, 
   RedirectToSignIn, 
@@ -31,14 +62,35 @@ const COLORS = {
 };
 
 const ICONS = {
-  Home: () => <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"></path><polyline points="9 22 9 12 15 12 15 22"></polyline></svg>,
-  Starred: () => <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"></polygon></svg>,
-  Search: () => <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>,
-  Profile: () => <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path><circle cx="12" cy="7" r="4"></circle></svg>,
-  Review: () => <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polyline points="23 4 23 10 17 10"></polyline><polyline points="1 20 1 14 7 14"></polyline><path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"></path></svg>,
-  Feed: () => <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="10"></circle><line x1="2" y1="12" x2="22" y2="12"></line><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"></path></svg>,
-  StarFilled: () => <svg width="24" height="24" viewBox="0 0 24 24" fill="currentColor" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"></polygon></svg>,
-  Bell: () => <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"></path><path d="M13.73 21a2 2 0 0 1-3.46 0"></path></svg>,
+  Home: (props) => <Home size={20} strokeWidth={1.8} {...props} />,
+  Starred: (props) => <Star size={20} strokeWidth={1.8} {...props} />,
+  Search: (props) => <Search size={20} strokeWidth={1.8} {...props} />,
+  Profile: (props) => <User size={20} strokeWidth={1.8} {...props} />,
+  Review: (props) => <RefreshCw size={20} strokeWidth={1.8} {...props} />,
+  Feed: (props) => <Rss size={20} strokeWidth={1.8} {...props} />,
+  StarFilled: (props) => <Star size={20} strokeWidth={1.8} fill="currentColor" {...props} />,
+  Bell: (props) => <Bell size={20} strokeWidth={1.8} {...props} />,
+  Upvote: (props) => <ChevronUp size={18} strokeWidth={2.5} {...props} />,
+  Best: (props) => <Award size={18} strokeWidth={1.8} {...props} />,
+  Trash: (props) => <Trash2 size={16} strokeWidth={1.8} {...props} />,
+  Plus: (props) => <Plus size={16} strokeWidth={1.8} {...props} />,
+  Check: (props) => <Check size={16} strokeWidth={1.8} {...props} />,
+  Book: (props) => <BookOpen size={16} strokeWidth={1.8} {...props} />,
+  Lock: (props) => <Lock size={16} strokeWidth={1.8} {...props} />,
+  Share: (props) => <Share2 size={16} strokeWidth={1.8} {...props} />,
+  Camera: (props) => <Camera size={16} strokeWidth={1.8} {...props} />,
+  Settings: (props) => <Settings size={16} strokeWidth={1.8} {...props} />,
+  Edit: (props) => <Pencil size={16} strokeWidth={1.8} {...props} />,
+  Globe: (props) => <Globe size={16} strokeWidth={1.8} {...props} />,
+  Back: (props) => <ArrowLeft size={16} strokeWidth={1.8} {...props} />,
+  Close: (props) => <X size={16} strokeWidth={1.8} {...props} />,
+  Idea: (props) => <Lightbulb size={16} strokeWidth={1.8} {...props} />,
+  ChevronRight: (props) => <ChevronRight size={18} strokeWidth={1.8} {...props} />,
+  LogOut: (props) => <LogOut size={20} strokeWidth={1.8} {...props} />,
+  BellOff: (props) => <BellOff size={20} strokeWidth={1.8} {...props} />,
+  Moon: (props) => <Moon size={20} strokeWidth={1.8} {...props} />,
+  Alert: (props) => <AlertTriangle size={36} strokeWidth={1.8} {...props} />,
+  Folder: (props) => <FolderOpen size={36} strokeWidth={1.8} {...props} />
 };
 
 const SUBJECTS = [
@@ -53,14 +105,17 @@ const SettingRow = ({ icon, label, onClick, isDestructive, hasToggle, toggleValu
       display: 'flex',
       alignItems: 'center',
       justifyContent: 'space-between',
-      padding: '16px 20px',
+      padding: '16px',
       borderBottom: '1px solid #F0F2F5',
       cursor: (hasToggle || isTheme) ? 'default' : 'pointer',
-      backgroundColor: '#FFF'
+      backgroundColor: '#FFF',
+      width: '100%'
     }}
   >
     <div style={{ display: 'flex', alignItems: 'center', gap: '14px' }}>
-      <span style={{ fontSize: '20px' }}>{icon}</span>
+      <span style={{ color: isDestructive ? '#FF5252' : COLORS.primary }}>
+        {typeof icon === 'string' ? icon : icon({ size: 20 })}
+      </span>
       <span style={{ fontSize: '15px', fontWeight: '500', color: isDestructive ? '#FF5252' : COLORS.textDark }}>{label}</span>
     </div>
     
@@ -104,15 +159,39 @@ const SettingRow = ({ icon, label, onClick, isDestructive, hasToggle, toggleValu
     )}
 
     {!hasToggle && !isTheme && (
-      <span style={{ color: COLORS.textMuted, fontSize: '18px' }}>›</span>
+      <span style={{ color: COLORS.textMuted }}><ICONS.ChevronRight /></span>
     )}
   </div>
 );
 
+const LongText = ({ text, limit = 300 }) => {
+  const [isExpanded, setIsExpanded] = useState(false);
+  const shouldCollapse = text.length > limit;
+
+  return (
+    <div style={{ wordBreak: 'break-word', overflowWrap: 'anywhere', whiteSpace: 'pre-wrap' }}>
+      <p style={{ margin: 0, fontSize: '15px', lineHeight: '1.8', color: COLORS.textBody }}>
+        {isExpanded || !shouldCollapse ? text : `${text.substring(0, limit)}...`}
+      </p>
+      {shouldCollapse && (
+        <button 
+          onClick={() => setIsExpanded(!isExpanded)}
+          style={{ background: 'none', border: 'none', color: COLORS.primary, fontSize: '13px', fontWeight: 'bold', cursor: 'pointer', padding: '4px 0', marginTop: '4px' }}
+        >
+          {isExpanded ? 'Read Less' : 'Read More'}
+        </button>
+      )}
+    </div>
+  );
+};
+
 export default function App() {
   const { isLoaded, isSignedIn, user } = useUser();
   const { signOut } = useClerk();
-  const { supabase, userId, getDb } = useSupabase();
+  const { supabase, isReady } = useSupabase();
+
+
+  // rest of your code
 
   
   const [entries, setEntries] = useState([]);
@@ -150,6 +229,13 @@ export default function App() {
   
   const searchInputRef = useRef(null);
   
+  // Answers State
+  const [answers, setAnswers] = useState([]);
+  const [answersLoading, setAnswersLoading] = useState(false);
+  const [newAnswer, setNewAnswer] = useState('');
+  const [isSubmittingAnswer, setIsSubmittingAnswer] = useState(false);
+  const [isAnswerFormOpen, setIsAnswerFormOpen] = useState(false);
+  
   // Detail View State
   const [selectedEntry, setSelectedEntry] = useState(null);
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
@@ -171,13 +257,20 @@ export default function App() {
   const [imageFile, setImageFile] = useState(null);
   const [imagePreview, setImagePreview] = useState(null);
   const [showLightbox, setShowLightbox] = useState(false);
+  
+  const showToast = useCallback((message, type) => {
+    setToast({ show: true, message, type });
+    setTimeout(() => {
+      setToast(prev => ({ ...prev, show: false }));
+    }, 2500);
+  }, []);
 
   const fetchEntries = useCallback(async () => {
     if (!user) return;
     setLoading(true);
     setFetchError(false);
     try {
-      const db = await getDb();
+      const db = supabase;
       const { data, error } = await db
         .from('entries')
         .select('id, user_id, question, answer, subject, chapter, tags, starred, review_count, last_reviewed, created_at, image_url, is_public')
@@ -192,12 +285,12 @@ export default function App() {
     } finally {
       setLoading(false);
     }
-  }, [user, getDb]);
+  }, [user, supabase]);
 
 
   const notifyAllUsers = useCallback(async (fromUserId, entryId, message, type = 'new_feed_post') => {
     try {
-      const db = await getDb();
+      const db = supabase;
       const { data: allProfiles } = await db
         .from('profiles')
         .select('user_id')
@@ -215,13 +308,13 @@ export default function App() {
     } catch (err) {
       console.error('Notify users error:', err);
     }
-  }, [getDb]);
+  }, [supabase]);
 
   // Profile Sync
   const fetchProfile = useCallback(async () => {
     if (!user) return;
     try {
-      const db = await getDb();
+      const db = supabase;
       const { data, error } = await db
         .from('profiles')
         .select('user_id, display_name, avatar_url, bio, reviews_done')
@@ -256,7 +349,7 @@ export default function App() {
     } catch (err) {
       console.error('Fetch profile error:', err);
     }
-  }, [user, getDb, notifyAllUsers]);
+  }, [user, supabase, notifyAllUsers]);
 
 
   const getTimeAgo = (dateStr) => {
@@ -276,7 +369,7 @@ export default function App() {
     if (!user) return;
     setIsSharing(true);
     try {
-      const db = await getDb();
+      const db = supabase;
       const { error: updateError } = await db
         .from('entries')
         .update({ is_public: true })
@@ -291,8 +384,10 @@ export default function App() {
       showToast('Shared to class feed!', 'success');
       await notifyAllUsers(user.id, entry.id,
         `${profile?.display_name || user.firstName} shared a new question in ${entry.subject}`);
-      setSelectedEntry(prev => ({ ...prev, is_public: true }));
-      setEntries(prev => prev.map(e => e.id === entry.id ? { ...e, is_public: true } : e));
+      
+      const updatedEntry = { ...entry, is_public: true };
+      setSelectedEntry(updatedEntry);
+      setEntries(prev => prev.map(e => e.id === entry.id ? updatedEntry : e));
       if (currentTab === 'Feed') await fetchFeed();
     } catch (err) {
       console.error('Share to feed error:', err);
@@ -307,7 +402,7 @@ export default function App() {
     if (!user) return;
     setIsSharing(true);
     try {
-      const db = await getDb();
+      const db = supabase;
       const { error: updateError } = await db
         .from('entries')
         .update({ is_public: false })
@@ -361,7 +456,7 @@ export default function App() {
     if (!user) return;
     showToast('Sending test notification...', 'info');
     try {
-      const db = await getDb();
+      const db = supabase;
       await db.from('notifications').insert({
         user_id: user.id,
         from_user_id: user.id,
@@ -380,7 +475,7 @@ export default function App() {
   const fetchUnreadCount = useCallback(async () => {
     if (!user) return;
     try {
-      const db = await getDb();
+      const db = supabase;
       const { count } = await db
         .from('notifications')
         .select('id', { count: 'exact', head: true })
@@ -388,41 +483,59 @@ export default function App() {
         .eq('is_read', false);
       setUnreadCount(count || 0);
     } catch (err) { console.error('Fetch unread count error:', err); }
-  }, [user, getDb]);
+  }, [user, supabase]);
 
 
   const fetchNotifications = useCallback(async () => {
     if (!user) return;
     try {
-      const db = await getDb();
+      const db = supabase;
       const { data } = await db
         .from('notifications')
-        .select('id, message, type, entry_id, is_read, created_at, profiles:from_user_id(display_name, avatar_url)')
+        .select('*')
         .eq('user_id', user.id)
         .order('created_at', { ascending: false })
         .limit(50);
       setNotifications(data || []);
     } catch (err) { console.error('Fetch notifications error:', err); }
-  }, [user, getDb]);
+  }, [user, supabase]);
 
 
-  const markAllAsRead = async () => {
+  const markAllAsRead = useCallback(async () => {
     if (!user) return;
+    
+    console.log("Marking all notifications as read for user:", user.id);
+    
+    // Optimistic UI update
+    setUnreadCount(0);
+    setNotifications(prev => prev.map(n => ({ ...n, is_read: true })));
+    
     try {
-      const db = await getDb();
-      await db.from('notifications').update({ is_read: true })
+      const db = supabase;
+      const { error } = await db.from('notifications').update({ is_read: true })
         .eq('user_id', user.id).eq('is_read', false);
-      setUnreadCount(0);
-      setNotifications(prev => prev.map(n => ({ ...n, is_read: true })));
-    } catch (err) { console.error('Mark all read error:', err); }
-  };
+        
+      if (error) {
+        console.error("Failed to mark notifications as read:", error.message);
+        // Revert by fetching fresh instead of manually reverting to potentially stale state
+        fetchNotifications();
+        if (typeof fetchUnreadCount === 'function') fetchUnreadCount();
+      } else {
+        console.log("Successfully marked notifications as read in Supabase.");
+      }
+    } catch (err) { 
+      console.error('Mark all read error:', err);
+      fetchNotifications();
+      if (typeof fetchUnreadCount === 'function') fetchUnreadCount();
+    }
+  }, [user, supabase, fetchNotifications, fetchUnreadCount]);
 
 
   const markAsRead = async (notifId) => {
     try {
       const notif = notifications.find(n => n.id === notifId);
       if (notif && !notif.is_read) {
-        const db = await getDb();
+        const db = supabase;
         await db.from('notifications').update({ is_read: true }).eq('id', notifId);
         setNotifications(prev => prev.map(n => n.id === notifId ? { ...n, is_read: true } : n));
         setUnreadCount(prev => Math.max(0, prev - 1));
@@ -433,40 +546,215 @@ export default function App() {
 
   const fetchMemberCount = useCallback(async () => {
     try {
-      const db = await getDb();
+      const db = supabase;
       const { count } = await db
         .from('profiles')
         .select('user_id', { count: 'exact', head: true });
       setMemberCount(count || 0);
     } catch (err) { console.error('Fetch member count error:', err); }
-  }, [getDb]);
+  }, [supabase]);
 
 
   const fetchFeed = useCallback(async () => {
     try {
-      const db = await getDb();
+      const db = supabase;
       const { data } = await db
         .from('class_feed')
-        .select('posted_at, user_id, entry_id, entries!inner(id, question, answer, subject, chapter, tags, image_url, user_id), profiles!inner(display_name, avatar_url)')
+        .select('posted_at, user_id, entry_id, entries!inner(id, question, answer, subject, chapter, tags, image_url, user_id, is_public), profiles!inner(display_name, avatar_url)')
         .order('posted_at', { ascending: false })
         .limit(50);
-      setFeedEntries(data || []);
+      
+      // Filter out duplicates by entry_id
+      const uniqueData = [];
+      const seenIds = new Set();
+      (data || []).forEach(item => {
+        if (!seenIds.has(item.entry_id)) {
+          seenIds.add(item.entry_id);
+          uniqueData.push(item);
+        }
+      });
+
+      setFeedEntries(uniqueData);
     } catch (err) { console.error('Fetch feed error:', err); }
-  }, [getDb]);
+  }, [supabase]);
+
+  const fetchAnswers = useCallback(async (entryId) => {
+    if (!entryId) return;
+    setAnswersLoading(true);
+    try {
+      const db = supabase;
+      const { data, error } = await db
+        .from('answers')
+        .select(`
+          *,
+          profiles:user_id(display_name, avatar_url),
+          votes:answer_votes(user_id, vote_type)
+        `)
+        .eq('entry_id', entryId);
+      
+      if (error) throw error;
+      
+      const processed = (data || []).map(ans => {
+        const score = (ans.votes || []).reduce((acc, v) => acc + v.vote_type, 0);
+        const userVote = ans.votes?.find(v => v.user_id === user.id)?.vote_type || 0;
+        return {
+          ...ans,
+          score,
+          user_vote: userVote
+        };
+      });
+ 
+      const sorted = processed.sort((a, b) => {
+        if (a.is_best_answer) return -1;
+        if (b.is_best_answer) return 1;
+        if (b.score !== a.score) return b.score - a.score;
+        return new Date(b.created_at) - new Date(a.created_at);
+      });
+
+      setAnswers(sorted);
+    } catch (err) {
+      console.error('Fetch answers error:', err);
+    } finally {
+      setAnswersLoading(false);
+    }
+  }, [supabase, user?.id]);
+
+  const handleVote = useCallback(async (answerId, voteType) => {
+    if (!user) return;
+    
+    // 1. Find answer
+    const answer = answers.find(a => a.id === answerId);
+    if (!answer) return;
+
+    // 2. Optimistic Update
+    const oldAnswers = [...answers];
+    const newVote = answer.user_vote === voteType ? 0 : voteType;
+    const scoreDiff = newVote - answer.user_vote;
+
+    setAnswers(prev => prev.map(a => a.id === answerId ? {
+      ...a,
+      score: a.score + scoreDiff,
+      user_vote: newVote
+    } : a));
+
+    // 3. Persistent Update
+    const db = supabase;
+    try {
+      if (newVote === 0) {
+        // Delete vote
+        await db.from('answer_votes').delete().eq('answer_id', answerId).eq('user_id', user.id);
+      } else {
+        // Upsert vote (using the UNIQUE constraint we added in Step 1)
+        await db.from('answer_votes').upsert({
+          answer_id: answerId,
+          user_id: user.id,
+          vote_type: newVote
+        }, { onConflict: 'answer_id, user_id' });
+      }
+    } catch (err) {
+      console.error('Vote error:', err);
+      // Revert if failed
+      setAnswers(oldAnswers);
+      showToast('Voting failed. Try again.', 'error');
+    }
+  }, [supabase, answers, user, showToast]);
+
+  const handleSetBestAnswer = async (answerId) => {
+    if (!selectedEntry || selectedEntry.user_id !== user.id) return;
+    const db = supabase;
+    try {
+      const answer = answers.find(a => a.id === answerId);
+      if (answer && answer.is_best_answer) {
+        // Toggle off
+        await db.from('answers').update({ is_best_answer: false }).eq('id', answerId);
+        showToast('Best answer removed.', 'info');
+      } else {
+        // Unset previous best for THIS entry
+        await db.from('answers').update({ is_best_answer: false }).eq('entry_id', selectedEntry.id);
+        // Set new best
+        await db.from('answers').update({ is_best_answer: true }).eq('id', answerId);
+        showToast('Best answer set! ⭐', 'success');
+      }
+      fetchAnswers(selectedEntry.id);
+    } catch (err) {
+      console.error('Set best answer error:', err);
+    }
+  };
+
+  const handleSubmitAnswer = async () => {
+    if (!newAnswer.trim() || !selectedEntry) return;
+    setIsSubmittingAnswer(true);
+    const db = supabase;
+    try {
+      const { error } = await db.from('answers').insert({
+        entry_id: selectedEntry.id,
+        user_id: user.id,
+        answer_text: newAnswer.trim()
+      });
+      if (error) throw error;
+      setNewAnswer('');
+      fetchAnswers(selectedEntry.id);
+      showToast('Answer added! 🚀', 'success');
+      
+      // Notify question owner
+      if (selectedEntry.user_id !== user.id) {
+        await db.from('notifications').insert({
+          user_id: selectedEntry.user_id,
+          from_user_id: user.id,
+          type: 'new_answer',
+          message: `${profile?.display_name || user.firstName} answered your question! 💡`,
+          entry_id: selectedEntry.id,
+          is_read: false
+        });
+      }
+    } catch (err) {
+      console.error('Submit answer error:', err);
+      showToast('Failed to post answer.', 'error');
+    } finally {
+      setIsSubmittingAnswer(false);
+    }
+  };
+
+  const handleDeleteAnswer = async (answerId) => {
+    if (!user) return;
+    
+    // Optimistic Update
+    const oldAnswers = [...answers];
+    setAnswers(prev => prev.filter(a => a.id !== answerId));
+    
+    try {
+      const db = supabase;
+      const { error } = await db
+        .from('answers')
+        .delete()
+        .eq('id', answerId)
+        .eq('user_id', user.id); // Security check
+        
+      if (error) throw error;
+      showToast('Answer deleted.', 'success');
+    } catch (err) {
+      console.error('Delete answer error:', err);
+      // Revert if failed
+      setAnswers(oldAnswers);
+      showToast('Failed to delete answer.', 'error');
+    }
+  };
 
 
   useEffect(() => {
-    if (isSignedIn && user) {
+    if (isSignedIn && user && isReady) {
       fetchEntries();
       fetchProfile();
       fetchMemberCount();
       fetchFeed();
       fetchUnreadCount();
 
-      // Real-time notifications subscription
+      // Real-time subscriptions
       const setupSubscription = async () => {
-        const db = await getDb();
-        const channel = db
+        const db = supabase;
+        
+        // Notifications subscription
+        const notifChannel = db
           .channel(`notifs-${user.id}`)
           .on('postgres_changes', {
             event: 'INSERT',
@@ -485,42 +773,92 @@ export default function App() {
             }
             if (navigator.vibrate) navigator.vibrate(200);
             fetchNotifications();
+          })
+          .subscribe();
 
+        // Feed subscription
+        const feedChannel = db
+          .channel('feed')
+          .on('postgres_changes', {
+            event: 'INSERT',
+            schema: 'public',
+            table: 'class_feed'
+          }, () => {
+            fetchFeed();
+            fetchMemberCount();
+          })
+          .subscribe();
+
+        // Answers & Votes subscription
+        const answersChannel = db
+          .channel('answers')
+          .on('postgres_changes', {
+            event: '*',
+            schema: 'public',
+            table: 'answers'
+          }, payload => {
+            if (selectedEntry && (payload.new?.entry_id === selectedEntry.id || payload.old?.entry_id === selectedEntry.id)) {
+              fetchAnswers(selectedEntry.id);
+            }
+          })
+          .on('postgres_changes', {
+            event: '*',
+            schema: 'public',
+            table: 'answer_votes'
+          }, () => {
+            if (selectedEntry) {
+              fetchAnswers(selectedEntry.id);
+            }
           })
           .subscribe();
         
-        return channel;
+        return { notifChannel, feedChannel, answersChannel };
       };
 
-      let activeChannel;
-      setupSubscription().then(channel => { activeChannel = channel; });
+      let channels;
+      setupSubscription().then(res => { channels = res; });
 
-      // Cleanup on unmount — prevents memory leaks
+      // Cleanup on unmount
       return () => { 
-        if (activeChannel) {
-          supabase.removeChannel(activeChannel);
+        if (channels) {
+          supabase.removeChannel(channels.notifChannel);
+          supabase.removeChannel(channels.feedChannel);
+          supabase.removeChannel(channels.answersChannel);
         }
       };
     }
 
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [isSignedIn, user?.id]);
+  }, [isSignedIn, user?.id, isReady]);
 
   useEffect(() => {
-    if (currentTab === 'Feed') {
+    if (selectedEntry && isReady) {
+      fetchAnswers(selectedEntry.id);
+    }
+  }, [selectedEntry, fetchAnswers, isReady]);
+
+  useEffect(() => {
+    console.log("Current Tab changed to:", currentTab);
+    if (!isReady) return;
+    
+    if (currentTab && currentTab.toLowerCase() === 'notifs') {
+      console.log("Notifications tab opened: Clearing badge...");
+      fetchNotifications();
+      // 1. Optimistic UI: Instantly clear the badge
+      setUnreadCount(0); 
+      // 2. Database Sync: Mark as read
+      markAllAsRead();
+    } else if (currentTab && currentTab.toLowerCase() === 'feed') {
       fetchFeed();
       fetchMemberCount();
     }
-    if (currentTab === 'Notifications') {
-      fetchNotifications();
-      // Reset count locally when viewing the screen
-      setUnreadCount(0);
-    }
-  }, [currentTab, fetchFeed, fetchMemberCount, fetchNotifications]);
+  }, [currentTab, fetchFeed, fetchMemberCount, fetchNotifications, isReady, markAllAsRead]);
 
   useEffect(() => {
     document.title = "StudyVault — Class X";
-    fetchEntries();
+    if (isReady && isSignedIn) {
+      fetchEntries();
+    }
 
     const handleKeyDown = (e) => {
       // Escape key closes modals/detail
@@ -544,20 +882,14 @@ export default function App() {
 
     window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);
-  }, [fetchEntries]);
+  }, [fetchEntries, isReady, isSignedIn]);
 
-  const showToast = (message, type) => {
-    setToast({ show: true, message, type });
-    setTimeout(() => {
-      setToast(prev => ({ ...prev, show: false }));
-    }, 2500);
-  };
 
   const saveName = async () => {
     if (!tempName.trim() || !user) return;
     try {
       await user.update({ firstName: tempName.trim() });
-      const db = await getDb();
+      const db = supabase;
       await db
         .from('profiles')
         .update({ display_name: tempName.trim() })
@@ -575,7 +907,7 @@ export default function App() {
   const saveBio = async () => {
     if (!user) return;
     try {
-      const db = await getDb();
+      const db = supabase;
       await db
         .from('profiles')
         .update({ bio: tempBio.trim() })
@@ -626,7 +958,7 @@ export default function App() {
       const blob = await new Promise(resolve => canvas.toBlob(resolve, 'image/jpeg', 0.85));
 
       const path = `${user.id}/avatar.jpg`;
-      const db = await getDb();
+      const db = supabase;
       const { error: uploadError } = await db.storage
         .upload(path, blob, { upsert: true, contentType: 'image/jpeg' });
       if (uploadError) throw uploadError;
@@ -670,7 +1002,7 @@ export default function App() {
       btn.style.animation = 'starPop 0.3s ease';
     }
     try {
-      const db = await getDb();
+      const db = supabase;
       const { error } = await db.from('entries').update({ starred: newStarredStatus }).eq('id', entryToToggle.id);
       if (error) throw error;
     } catch (err) {
@@ -685,12 +1017,48 @@ export default function App() {
   };
 
   const handleDelete = async () => {
+    if (!selectedEntry) return;
     setIsDeleting(true);
     try {
-      const db = await getDb();
+      const db = supabase;
+
+      // 1. Delete associated image from storage if exists
+      if (selectedEntry.image_url) {
+        try {
+          // Find where the bucket name ends and the file path begins
+          const bucketString = 'entry-images/';
+          const pathIndex = selectedEntry.image_url.indexOf(bucketString);
+          
+          if (pathIndex !== -1) {
+            // Extract strictly the file name/path
+            const filePath = selectedEntry.image_url.substring(pathIndex + bucketString.length);
+            console.log("Attempting to delete storage file:", filePath);
+            
+            // Execute deletion
+            const { error: storageError } = await db.storage
+              .from('entry-images')
+              .remove([filePath]);
+              
+            if (storageError) {
+              console.error("Supabase Storage deletion failed:", storageError.message);
+            } else {
+              console.log("Storage file deleted successfully.");
+            }
+          }
+        } catch (err) {
+          console.error("Failed to parse image URL for deletion:", err);
+        }
+      }
+
+      // 2. Delete database row
+      // Database will handle cascading deletions for class_feed, answers, and notifications
       const { error } = await db.from('entries').delete().eq('id', selectedEntry.id);
       if (error) throw error;
+      
+      // Update local state
       setEntries(prev => prev.filter(e => e.id !== selectedEntry.id));
+      setFeedEntries(prev => prev.filter(f => f.entry_id !== selectedEntry.id));
+      
       setShowDeleteConfirm(false);
       setSelectedEntry(null);
       showToast('✓ Entry deleted', 'success');
@@ -714,7 +1082,7 @@ export default function App() {
     setIsSaving(true);
     
     try {
-      const db = await getDb();
+      const db = supabase;
       const parsedTags = formTags
         ? formTags.split(',').map(t => t.trim()).filter(Boolean)
         : [];
@@ -757,7 +1125,7 @@ export default function App() {
         subject: formSubject,
         chapter: formChapter.trim() || null,
         tags: parsedTags,
-        user_id: userId,
+        user_id: user?.id,
         starred: false,
         is_public: false,
         image_url: imageUrl,
@@ -767,9 +1135,11 @@ export default function App() {
       
       if (error) throw error;
       
+      // Update local state (no longer auto-shares to feed)
       if (data && data.length > 0) {
         setEntries(prev => [data[0], ...prev]);
-        showToast('✓ Saved to your vault!', 'success');
+        showToast('✓ Entry saved', 'success');
+        // Reset form
         setFormQuestion(''); setFormSubject(SUBJECTS[0]); setFormChapter('');
         setFormAnswer(''); setFormTags(''); setImageFile(null); setImagePreview(null);
         setAddStep(1); setShowAddEntry(false);
@@ -793,7 +1163,7 @@ export default function App() {
       const s = new Set(prev); s.delete(entry.id); return s;
     });
     try {
-      const db = await getDb();
+      const db = supabase;
       const { error } = await db.from('entries').update({
         review_count: (entry.review_count || 0) + 1,
         last_reviewed: new Date().toISOString()
@@ -995,12 +1365,13 @@ export default function App() {
               <div style={{
                 backgroundColor: COLORS.cardSurface,
                 borderRadius: '24px',
-                padding: '24px',
+                padding: '20px 16px',
                 boxShadow: COLORS.shadow,
                 display: 'flex', 
                 flexDirection: 'column',
                 alignItems: 'center',
-                position: 'relative'
+                position: 'relative',
+                width: '100%'
               }}>
                 <div style={{ position: 'relative', width: '90px', height: '90px', marginBottom: '16px' }}>
                   <div style={{
@@ -1039,7 +1410,7 @@ export default function App() {
                     cursor: 'pointer',
                     boxShadow: '0 2px 8px rgba(0,0,0,0.1)'
                   }}>
-                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke={COLORS.primary} strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"></path><circle cx="12" cy="13" r="4"></circle></svg>
+                    <ICONS.Camera size={14} color={COLORS.primary} strokeWidth={2.5} />
                     <input type="file" accept="image/*" style={{ display: 'none' }} onChange={handleAvatarUpload} />
                   </label>
                 </div>
@@ -1092,40 +1463,40 @@ export default function App() {
               </div>
 
               {/* Stats Row */}
-              <div style={{ display: 'flex', gap: '12px' }}>
+              <div style={{ display: 'flex', gap: '8px', width: '100%' }}>
                 {[
                   { label: 'My Entries', value: totalSaved },
                   { label: 'My Starred', value: starred },
                   { label: 'Reviews Done', value: profile?.reviews_done || 0 }
                 ].map((stat, i) => (
-                  <div key={i} style={{ flex: 1, backgroundColor: COLORS.cardSurface, padding: '16px 12px', borderRadius: '20px', display: 'flex', flexDirection: 'column', alignItems: 'center', boxShadow: '0 2px 8px rgba(0,0,0,0.04)' }}>
-                    <span style={{ fontSize: '18px', fontWeight: 'bold', color: COLORS.primary }}>{stat.value}</span>
-                    <span style={{ fontSize: '10px', color: COLORS.textMuted, textAlign: 'center' }}>{stat.label}</span>
+                  <div key={i} style={{ flex: 1, backgroundColor: COLORS.cardSurface, padding: '12px 8px', borderRadius: '16px', display: 'flex', flexDirection: 'column', alignItems: 'center', boxShadow: '0 2px 8px rgba(0,0,0,0.04)', minWidth: 0 }}>
+                    <span style={{ fontSize: '16px', fontWeight: 'bold', color: COLORS.primary }}>{stat.value}</span>
+                    <span style={{ fontSize: '9px', color: COLORS.textMuted, textAlign: 'center', textTransform: 'uppercase', letterSpacing: '0.3px' }}>{stat.label}</span>
                   </div>
                 ))}
               </div>
 
               <div style={{ backgroundColor: COLORS.cardSurface, borderRadius: '24px', overflow: 'hidden', boxShadow: COLORS.shadow }}>
-                <SettingRow icon="🔑" label="Change Password" onClick={() => setShowClerkSettings(true)} />
-                <SettingRow icon="📝" label={`My Review Queue (${reviewQueue.length})`} onClick={() => setCurrentTab('Review')} />
-                <SettingRow icon="🔔" label="Notification Status" onClick={() => {
+                <SettingRow icon={ICONS.Lock} label="Change Password" onClick={() => setShowClerkSettings(true)} />
+                <SettingRow icon={ICONS.Edit} label={`My Review Queue (${reviewQueue.length})`} onClick={() => setCurrentTab('Review')} />
+                <SettingRow icon={ICONS.Bell} label="Notification Status" onClick={() => {
                   if (Notification.permission === 'default') requestNotificationPermission();
                 }}>
                   <div style={{ fontSize: '12px', fontWeight: '600', color: Notification.permission === 'granted' ? COLORS.green : '#FF5252' }}>
                     {Notification.permission === 'granted' ? (svNotifs ? 'ENABLED' : 'MUTED') : Notification.permission.toUpperCase()}
                   </div>
                 </SettingRow>
-                <SettingRow icon="📲" label="Test Push Notification" onClick={sendTestNotification} />
-                <SettingRow icon="🔕" label="Mute Notifications" hasToggle toggleValue={!svNotifs} onToggle={() => {
+                <SettingRow icon={ICONS.Bell} label="Test Push Notification" onClick={sendTestNotification} />
+                <SettingRow icon={ICONS.BellOff} label="Mute Notifications" hasToggle toggleValue={!svNotifs} onToggle={() => {
                   const next = !svNotifs;
                   setSvNotifs(next);
                   localStorage.setItem('sv_notifs_enabled', next);
                 }} />
-                <SettingRow icon="🌓" label="App Theme" isTheme currentTheme={svTheme} onThemeChange={(t) => {
+                <SettingRow icon={ICONS.Moon} label="App Theme" isTheme currentTheme={svTheme} onThemeChange={(t) => {
                   setSvTheme(t);
                   localStorage.setItem('sv_theme', t);
                 }} />
-                <SettingRow icon="🚪" label="Sign Out" isDestructive onClick={() => setShowSignOutConfirm(true)} />
+                <SettingRow icon={ICONS.LogOut} label="Sign Out" isDestructive onClick={() => setShowSignOutConfirm(true)} />
               </div>
             </div>
           )}
@@ -1170,8 +1541,8 @@ export default function App() {
               </div>
 
               {filteredFeedEntries.length === 0 ? (
-                <div style={{ padding: '60px 20px', textAlign: 'center' }}>
-                  <div style={{ fontSize: '48px', marginBottom: '16px' }}>🌎</div>
+                <div style={{ padding: '60px 20px', textAlign: 'center', display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
+                  <Globe size={36} strokeWidth={1.8} style={{ color: '#90A4AE', marginBottom: '16px' }} />
                   <h3 style={{ fontSize: '18px', fontWeight: '700', color: COLORS.textDark, margin: '0 0 8px 0' }}>Nothing shared yet</h3>
                   <p style={{ fontSize: '13px', color: COLORS.textMuted, margin: '0 0 24px 0' }}>Be the first to share a Q&A with your class!</p>
                   <button 
@@ -1216,7 +1587,6 @@ export default function App() {
                         {item.entries.answer}
                       </div>
                       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', borderTop: '1px solid #F0F2F5', paddingTop: '12px' }}>
-                        <div style={{ fontSize: '11px', color: COLORS.textMuted }}>#{item.entries.chapter || 'Knowledge'}</div>
                         <div style={{ fontSize: '12px', color: COLORS.primary, fontWeight: '600' }}>View Full Answer →</div>
                       </div>
                     </div>
@@ -1242,8 +1612,8 @@ export default function App() {
               </div>
 
               {notifications.length === 0 ? (
-                <div style={{ padding: '80px 20px', textAlign: 'center' }}>
-                  <div style={{ fontSize: '48px', marginBottom: '16px', opacity: 0.5 }}>🔔</div>
+                <div style={{ padding: '80px 20px', textAlign: 'center', display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
+                  <Bell size={36} strokeWidth={1.8} style={{ color: '#90A4AE', marginBottom: '16px' }} />
                   <h3 style={{ fontSize: '18px', fontWeight: '700', color: COLORS.textDark, margin: '0 0 8px 0' }}>No notifications yet</h3>
                   <p style={{ fontSize: '13px', color: COLORS.textMuted, margin: 0 }}>We'll alert you when someone shares a new entry!</p>
                 </div>
@@ -1256,7 +1626,7 @@ export default function App() {
                         await markAsRead(notif.id);
                         if (notif.entry_id) {
                           // Fetch entry detail and open it
-                          const db = await getDb();
+                          const db = supabase;
                           const { data: entryData } = await db.from('entries').select('*').eq('id', notif.entry_id).single();
                           if (entryData) setSelectedEntry(entryData);
                         }
@@ -1368,7 +1738,7 @@ export default function App() {
                     fontWeight: 'bold'
                   }}
                 >
-                  ✕
+                  <ICONS.Close size={12} strokeWidth={2.5} />
                 </button>
               )}
             </div>
@@ -1454,7 +1824,7 @@ export default function App() {
                   alignItems: 'center',
                   gap: '16px'
                 }}>
-                  <div style={{ fontSize: '32px' }}>⚠️</div>
+                  <ICONS.Alert />
                   <div style={{ color: COLORS.textDark, fontSize: '15px', fontWeight: '500' }}>
                     Could not connect. Check your internet connection.
                   </div>
@@ -1486,7 +1856,7 @@ export default function App() {
                   alignItems: 'center',
                   gap: '16px'
                 }}>
-                  <div style={{ fontSize: '48px', opacity: 0.8, filter: 'grayscale(0.5)' }}>📖</div>
+                  <BookOpen size={36} strokeWidth={1.8} style={{ color: '#90A4AE', marginBottom: '16px' }} />
                   <div style={{ fontSize: '15px', lineHeight: '1.6', color: COLORS.textMuted }}>
                     Your vault is empty.<br/>Tap <span style={{color: COLORS.primary, fontWeight: 'bold'}}>{'+'}</span> to save your first answer!
                   </div>
@@ -1505,7 +1875,7 @@ export default function App() {
                     alignItems: 'center',
                     gap: '12px'
                   }}>
-                    <div style={{ fontSize: '32px' }}>🔍</div>
+                    <Search size={36} strokeWidth={1.8} style={{ color: '#90A4AE', marginBottom: '16px' }} />
                     <div style={{ color: COLORS.textDark, fontWeight: 'bold', fontSize: '16px' }}>
                       No saved answer found
                     </div>
@@ -1541,7 +1911,7 @@ export default function App() {
                     alignItems: 'center',
                     gap: '16px'
                   }}>
-                    <div style={{ fontSize: '48px', opacity: 0.8, filter: 'grayscale(0.5)' }}>📂</div>
+                    <FolderOpen size={36} strokeWidth={1.8} style={{ color: '#90A4AE', marginBottom: '16px' }} />
                     <div style={{ fontSize: '15px', lineHeight: '1.6', color: COLORS.textMuted }}>
                       No entries found.
                     </div>
@@ -1994,8 +2364,8 @@ export default function App() {
                 </div>
               )}
 
-              {/* Question Section */}
-              <div>
+              {/* Header: Question First */}
+              <div style={{ padding: '0 4px', marginBottom: '8px' }}>
                 <div style={{ 
                   fontSize: '11px', 
                   color: COLORS.textMuted, 
@@ -2023,11 +2393,11 @@ export default function App() {
                 height: '4px',
                 borderRadius: '2px',
                 backgroundColor: COLORS.primaryLight,
-                margin: '8px 0'
+                margin: '12px 0 24px 0'
               }} />
 
-              {/* Answer Section */}
-              <div>
+              {/* Original Answer Section */}
+              <div style={{ marginBottom: '32px' }}>
                 <div style={{ 
                   fontSize: '11px', 
                   color: COLORS.textMuted, 
@@ -2035,12 +2405,13 @@ export default function App() {
                   marginBottom: '10px',
                   fontWeight: '600'
                 }}>
-                  YOUR ANSWER
+                  ORIGINAL ANSWER
                 </div>
                 <div style={{
                   backgroundColor: COLORS.bg,
                   borderRadius: '20px',
-                  padding: '24px'
+                  padding: '24px',
+                  boxShadow: 'inset 0 2px 4px rgba(0,0,0,0.02)'
                 }}>
                   <p className="answer-text" style={{
                     margin: 0,
@@ -2053,12 +2424,38 @@ export default function App() {
                   </p>
                 </div>
 
-                {/* Share to Feed Section (Owner Only) */}
+                {/* Action Section (Owner Only) */}
                 {selectedEntry.user_id === user.id && (
                   <div style={{ marginTop: '24px', display: 'flex', flexDirection: 'column', gap: '12px' }}>
-                    {selectedEntry.is_public ? (
-                      <>
+                    {/* Share/Remove Toggle */}
+                    {(!selectedEntry.is_public && currentTab !== 'Feed') ? (
+                      <button
+                        onClick={() => handleShareToFeed(selectedEntry)}
+                        disabled={isSharing}
+                        style={{
+                          width: '100%',
+                          backgroundColor: COLORS.primary,
+                          color: '#fff',
+                          border: 'none',
+                          borderRadius: '12px',
+                          padding: '16px',
+                          fontSize: '14px',
+                          fontWeight: '600',
+                          fontFamily: 'inherit',
+                          cursor: 'pointer',
+                          display: 'flex',
+                          alignItems: 'center',
+                          justifyContent: 'center',
+                          gap: '8px',
+                          boxShadow: '0 4px 12px rgba(33,150,243,0.3)'
+                        }}
+                      >
+                        {isSharing ? <span className="spinner"></span> : '🚀 Share to Class Feed'}
+                      </button>
+                    ) : (
+                      <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
                         <div style={{ 
+                          flex: 1,
                           backgroundColor: '#E8F5E9', 
                           border: `1px solid ${COLORS.green}`, 
                           borderRadius: '12px', 
@@ -2069,80 +2466,53 @@ export default function App() {
                         }}>
                           <span style={{ fontSize: '18px' }}>✅</span>
                           <span style={{ fontSize: '13px', color: COLORS.green, fontWeight: '600' }}>
-                            Shared — classmates can see this
+                            Shared with class
                           </span>
                         </div>
                         <button
                           onClick={() => handleRemoveFromFeed(selectedEntry)}
                           disabled={isSharing}
                           style={{
-                            width: '100%',
+                            padding: '12px 20px',
                             backgroundColor: 'transparent',
                             color: '#FF5252',
                             border: '1.5px solid #FF5252',
                             borderRadius: '12px',
-                            padding: '12px',
                             fontSize: '13px',
                             fontWeight: '600',
-                            fontFamily: 'inherit',
-                            cursor: 'pointer',
-                            display: 'flex',
-                            alignItems: 'center',
-                            justifyContent: 'center',
-                            gap: '8px'
+                            cursor: 'pointer'
                           }}
                         >
-                          {isSharing ? <span className="spinner"></span> : 'Remove from Feed'}
+                          {isSharing ? <span className="spinner"></span> : 'Remove'}
                         </button>
-                      </>
-                    ) : (
-                      <>
-                        <div style={{ 
-                          backgroundColor: '#F0F2F5', 
-                          borderRadius: '12px', 
-                          padding: '12px 16px',
-                          display: 'flex',
-                          alignItems: 'center',
-                          gap: '10px'
-                        }}>
-                          <span style={{ fontSize: '18px' }}>🔒</span>
-                          <span style={{ fontSize: '13px', color: COLORS.textMuted, fontWeight: '600' }}>
-                            Private — only you can see this
-                          </span>
-                        </div>
-                        <button
-                          onClick={() => handleShareToFeed(selectedEntry)}
-                          disabled={isSharing}
-                          style={{
-                            width: '100%',
-                            backgroundColor: COLORS.primary,
-                            color: '#fff',
-                            border: 'none',
-                            borderRadius: '12px',
-                            padding: '12px',
-                            fontSize: '14px',
-                            fontWeight: '600',
-                            fontFamily: 'inherit',
-                            cursor: 'pointer',
-                            display: 'flex',
-                            alignItems: 'center',
-                            justifyContent: 'center',
-                            gap: '8px',
-                            boxShadow: '0 4px 12px rgba(33,150,243,0.3)'
-                          }}
-                        >
-                          {isSharing ? <span className="spinner"></span> : 'Share to Class Feed'}
-                        </button>
-                      </>
+                      </div>
                     )}
+
+                    {/* Permanent Delete Action */}
+                    <button
+                      onClick={() => setShowDeleteConfirm(true)}
+                      style={{
+                        width: '100%',
+                        backgroundColor: 'transparent',
+                        color: COLORS.textMuted,
+                        border: '1px solid #ECEFF1',
+                        borderRadius: '12px',
+                        padding: '12px',
+                        fontSize: '13px',
+                        fontWeight: '500',
+                        cursor: 'pointer',
+                        marginTop: '4px'
+                      }}
+                    >
+                      🗑️ Delete Permanently
+                    </button>
                   </div>
                 )}
-
               </div>
 
               {/* Image below answer, if present */}
               {selectedEntry.image_url && (
-                <div style={{ marginTop: '16px' }}>
+                <div style={{ marginBottom: '24px' }}>
                   <img
                     src={selectedEntry.image_url}
                     alt="Attached"
@@ -2162,9 +2532,10 @@ export default function App() {
                   </div>
                 </div>
               )}
+
               {/* Tags Row */}
               {selectedEntry.tags && selectedEntry.tags.length > 0 && (
-                <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap', marginTop: '8px' }}>
+                <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap', marginBottom: '32px' }}>
                   {(Array.isArray(selectedEntry.tags) ? selectedEntry.tags : String(selectedEntry.tags).split(',').map(s=>s.trim())).filter(Boolean).map((tag, idx) => (
                     <span key={idx} style={{
                       color: COLORS.primary,
@@ -2177,6 +2548,282 @@ export default function App() {
                       #{tag}
                     </span>
                   ))}
+                </div>
+              )}
+
+              {/* Community Answers Section */}
+              {Boolean(selectedEntry.is_public) && (
+                <div style={{ marginTop: '16px', display: 'flex', flexDirection: 'column', gap: '20px' }}>
+                  <div style={{ 
+                    fontSize: '11px', 
+                    color: COLORS.textMuted, 
+                    letterSpacing: '1px', 
+                    fontWeight: '600',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'space-between'
+                  }}>
+                    <span>COMMUNITY ANSWERS ({answers.length})</span>
+                    <button 
+                      onClick={() => setIsAnswerFormOpen(!isAnswerFormOpen)}
+                      style={{
+                        backgroundColor: isAnswerFormOpen ? COLORS.bg : COLORS.primaryLight,
+                        color: isAnswerFormOpen ? COLORS.textMuted : COLORS.primary,
+                        border: 'none',
+                        borderRadius: '10px',
+                        padding: '6px 12px',
+                        fontSize: '11px',
+                        fontWeight: '700',
+                        cursor: 'pointer'
+                      }}
+                    >
+                      {isAnswerFormOpen ? 'Cancel' : 'Add Your Answer'}
+                    </button>
+                  </div>
+
+                  {/* Submit Answer Form (Toggleable) */}
+                  {isAnswerFormOpen && (
+                    <div style={{ 
+                      backgroundColor: COLORS.cardSurface,
+                      borderRadius: '20px',
+                      padding: '16px',
+                      boxShadow: COLORS.shadow,
+                      display: 'flex',
+                      flexDirection: 'column',
+                      gap: '12px',
+                      border: `1.5px solid ${COLORS.primaryLight}`
+                    }}>
+                      <textarea 
+                        placeholder="Add your answer to help your classmates..."
+                        value={newAnswer}
+                        onChange={e => setNewAnswer(e.target.value)}
+                        rows="3"
+                        style={{
+                          width: '100%',
+                          backgroundColor: COLORS.bg,
+                          border: 'none',
+                          borderRadius: '12px',
+                          padding: '12px',
+                          fontSize: '14px',
+                          fontFamily: 'inherit',
+                          outline: 'none',
+                          color: COLORS.textDark,
+                          lineHeight: '1.5'
+                        }}
+                      />
+                      <button
+                        onClick={handleSubmitAnswer}
+                        disabled={isSubmittingAnswer || !newAnswer.trim()}
+                        style={{
+                          alignSelf: 'flex-end',
+                          backgroundColor: COLORS.primary,
+                          color: '#fff',
+                          border: 'none',
+                          borderRadius: '12px',
+                          padding: '10px 20px',
+                          fontSize: '13px',
+                          fontWeight: 'bold',
+                          cursor: 'pointer',
+                          opacity: (isSubmittingAnswer || !newAnswer.trim()) ? 0.6 : 1,
+                          transition: 'all 0.2s'
+                        }}
+                      >
+                        {isSubmittingAnswer ? 'Posting...' : 'Post Answer'}
+                      </button>
+                    </div>
+                  )}
+
+                  {answersLoading ? (
+                    <div style={{ padding: '20px', textAlign: 'center' }}>
+                      <span className="spinner-blue"></span>
+                    </div>
+                  ) : answers.length === 0 ? (
+                    <div style={{ 
+                      padding: '32px 24px', 
+                      textAlign: 'center', 
+                      backgroundColor: '#F0F2F5', 
+                      borderRadius: '16px',
+                      color: COLORS.textMuted,
+                      fontSize: '13px'
+                    }}>
+                      No answers yet. Share your knowledge!
+                    </div>
+                  ) : (
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
+                      {answers.map(ans => (
+                        <div key={ans.id} style={{
+                          backgroundColor: ans.is_best_answer ? '#F1F8E9' : COLORS.cardSurface,
+                          borderRadius: '16px',
+                          padding: '16px',
+                          boxShadow: COLORS.shadow,
+                          border: ans.is_best_answer ? `1px solid ${COLORS.green}` : `1px solid #F0F2F5`,
+                          position: 'relative',
+                          display: 'flex',
+                          flexDirection: 'column',
+                          gap: '12px'
+                        }}>
+                          {/* Answer User Info */}
+                          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
+                            <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                              <div style={{ 
+                                width: '28px', 
+                                height: '28px', 
+                                borderRadius: '50%', 
+                                backgroundColor: COLORS.primaryLight, 
+                                overflow: 'hidden', 
+                                display: 'flex', 
+                                alignItems: 'center', 
+                                justifyContent: 'center',
+                                fontSize: '10px',
+                                fontWeight: 'bold',
+                                color: COLORS.primary
+                              }}>
+                                {ans.profiles?.avatar_url ? (
+                                  <img src={ans.profiles.avatar_url} style={{ width: '100%', height: '100%', objectFit: 'cover' }} alt="" />
+                                ) : (ans.profiles?.display_name || 'U')[0].toUpperCase()}
+                              </div>
+                              <div>
+                                <div style={{ fontSize: '13px', fontWeight: '600', color: COLORS.textDark }}>
+                                  {ans.profiles?.display_name || 'Classmate'}
+                                </div>
+                                <div style={{ fontSize: '10px', color: COLORS.textMuted }}>
+                                  {getTimeAgo(ans.created_at)}
+                                </div>
+                              </div>
+                            </div>
+                            
+                            {/* Best Answer Badge / Toggle */}
+                            {ans.is_best_answer ? (
+                              <div 
+                                onClick={() => selectedEntry.user_id === user.id && handleSetBestAnswer(ans.id)}
+                                style={{ 
+                                  display: 'flex', 
+                                  alignItems: 'center', 
+                                  gap: '4px', 
+                                  color: COLORS.green, 
+                                  fontSize: '10px', 
+                                  fontWeight: '800',
+                                  backgroundColor: '#DCEDC8',
+                                  padding: '4px 8px',
+                                  borderRadius: '8px',
+                                  cursor: selectedEntry.user_id === user.id ? 'pointer' : 'default',
+                                  letterSpacing: '0.5px'
+                                }}
+                              >
+                                🏆 BEST ANSWER
+                              </div>
+                            ) : (
+                              selectedEntry.user_id === user.id && (
+                                <button 
+                                  onClick={() => handleSetBestAnswer(ans.id)}
+                                  style={{
+                                    backgroundColor: 'transparent',
+                                    border: `1px solid ${COLORS.textMuted}`,
+                                    color: COLORS.textMuted,
+                                    borderRadius: '8px',
+                                    padding: '4px 12px',
+                                    fontSize: '11px',
+                                    fontWeight: '600',
+                                    cursor: 'pointer',
+                                    transition: 'all 0.2s'
+                                  }}
+                                  onMouseOver={e => { e.currentTarget.style.borderColor = COLORS.green; e.currentTarget.style.color = COLORS.green; }}
+                                  onMouseOut={e => { e.currentTarget.style.borderColor = COLORS.textMuted; e.currentTarget.style.color = COLORS.textMuted; }}
+                                >
+                                  Mark Best
+                                </button>
+                              )
+                            )}
+                          </div>
+
+                          <LongText text={ans.answer_text} limit={200} />
+
+                          <div style={{ 
+                            display: 'flex', 
+                            justifyContent: 'flex-start', 
+                            alignItems: 'center', 
+                            gap: '4px', 
+                            backgroundColor: '#F0F2F5', 
+                            alignSelf: 'flex-start', 
+                            padding: '4px', 
+                            borderRadius: '12px' 
+                          }}>
+                            <button 
+                              onClick={() => handleVote(ans.id, 1)}
+                              style={{
+                                display: 'flex',
+                                alignItems: 'center',
+                                justifyContent: 'center',
+                                backgroundColor: ans.user_vote === 1 ? COLORS.green : 'transparent',
+                                color: ans.user_vote === 1 ? '#fff' : COLORS.textMuted,
+                                border: 'none',
+                                borderRadius: '8px',
+                                padding: '6px',
+                                cursor: 'pointer',
+                                transition: 'all 0.2s'
+                              }}
+                            >
+                              <ICONS.Upvote />
+                            </button>
+                            <span style={{ 
+                              fontSize: '14px', 
+                              fontWeight: '800', 
+                              color: COLORS.textDark, 
+                              padding: '0 8px', 
+                              minWidth: '24px', 
+                              textAlign: 'center' 
+                            }}>
+                              {ans.score || 0}
+                            </span>
+                            <button 
+                              onClick={() => handleVote(ans.id, -1)}
+                              style={{
+                                display: 'flex',
+                                alignItems: 'center',
+                                justifyContent: 'center',
+                                backgroundColor: ans.user_vote === -1 ? '#FF5252' : 'transparent',
+                                color: ans.user_vote === -1 ? '#fff' : COLORS.textMuted,
+                                border: 'none',
+                                borderRadius: '8px',
+                                padding: '6px',
+                                cursor: 'pointer',
+                                transition: 'all 0.2s'
+                              }}
+                            >
+                              <div style={{ transform: 'rotate(180deg)', display: 'flex' }}><ICONS.Upvote /></div>
+                            </button>
+                          </div>
+
+                          {/* Delete My Answer */}
+                          {ans.user_id === user.id && (
+                            <button
+                              onClick={() => handleDeleteAnswer(ans.id)}
+                              style={{
+                                position: 'absolute',
+                                bottom: '16px',
+                                right: '16px',
+                                backgroundColor: 'transparent',
+                                border: 'none',
+                                color: '#FF5252',
+                                display: 'flex',
+                                alignItems: 'center',
+                                gap: '4px',
+                                cursor: 'pointer',
+                                opacity: 0.6,
+                                transition: 'opacity 0.2s',
+                                padding: '8px'
+                              }}
+                              onMouseOver={e => e.currentTarget.style.opacity = 1}
+                              onMouseOut={e => e.currentTarget.style.opacity = 0.6}
+                            >
+                              <ICONS.Trash />
+                              <span style={{ fontSize: '11px', fontWeight: '700' }}>DELETE</span>
+                            </button>
+                          )}
+                        </div>
+                      ))}
+                    </div>
+                  )}
                 </div>
               )}
 
@@ -2241,7 +2888,7 @@ export default function App() {
               lineHeight: '1'
             }}
           >
-            ×
+            <ICONS.Close size={24} />
           </button>
           <img
             src={selectedEntry.image_url}
@@ -2323,7 +2970,7 @@ export default function App() {
                   alignItems: 'center'
                 }}
               >
-                ←
+                <ICONS.Back size={24} />
               </button>
               <div style={{ 
                 color: COLORS.textDark, 
@@ -2462,7 +3109,7 @@ export default function App() {
                     boxShadow: '0 4px 16px rgba(33,150,243,0.3)'
                   }}
                 >
-                  Next: Add Answer →
+                  Next: Add Answer <ChevronRight size={16} strokeWidth={2.5} style={{ marginLeft: '4px' }} />
                 </button>
               </div>
             ) : (
@@ -2591,7 +3238,7 @@ export default function App() {
                       onMouseOver={e => e.currentTarget.style.backgroundColor = COLORS.primaryLight}
                       onMouseOut={e => e.currentTarget.style.backgroundColor = 'transparent'}
                       >
-                        <span style={{ fontSize: '28px' }}>📷</span>
+                        <Camera size={28} strokeWidth={1.8} style={{ color: COLORS.primary }} />
                         <span>Tap to attach a photo</span>
                       </div>
                       <input
@@ -2659,7 +3306,11 @@ export default function App() {
                       <div style={{display:'flex', alignItems:'center', justifyContent:'center', gap:'8px'}}>
                         <span className="spinner"></span> Saving...
                       </div>
-                    ) : 'Save to Vault ✓'}
+                    ) : (
+                      <div style={{display:'flex', alignItems:'center', justifyContent:'center', gap:'8px'}}>
+                         Save to Vault <Check size={18} strokeWidth={2.5} />
+                      </div>
+                    )}
                   </button>
                 </div>
               </div>
@@ -2746,7 +3397,7 @@ export default function App() {
                   <div style={{ width: '12px', height: '12px', borderRadius: '50%', backgroundColor: ai.color }} />
                   {ai.name}
                 </div>
-                <div style={{ color: COLORS.textMuted }}>→</div>
+                <div style={{ color: COLORS.textMuted }}><ICONS.ChevronRight size={16} /></div>
               </button>
             ))}
           </div>
@@ -2792,7 +3443,7 @@ export default function App() {
         {[
           { id: 'Home', icon: ICONS.Home },
           { id: 'Feed', icon: ICONS.Feed },
-          { id: 'Add', icon: () => <span style={{ fontSize: '28px', lineHeight: '1', fontWeight: '300' }}>+</span>, isAction: true },
+          { id: 'Add', icon: () => <Plus size={26} color="white" strokeWidth={1.8} />, isAction: true },
           { id: 'Notifs', icon: ICONS.Bell, badge: unreadCount, label: 'Notifications' },
           { id: 'Profile', icon: ICONS.Profile }
         ].map(tab => {
@@ -2849,7 +3500,7 @@ export default function App() {
                 alignItems: 'center',
                 justifyContent: 'center',
                 gap: '2px',
-                color: isActive ? COLORS.primary : COLORS.textMuted,
+                color: isActive ? '#2196F3' : '#90A4AE',
                 cursor: 'pointer',
                 fontFamily: "'Poppins', sans-serif",
                 width: '20%',
@@ -2963,7 +3614,9 @@ export default function App() {
             textAlign: 'center',
             boxShadow: '0 20px 40px rgba(0,0,0,0.2)'
           }} onClick={e => e.stopPropagation()}>
-            <div style={{ fontSize: '48px', marginBottom: '16px' }}>🚪</div>
+            <div style={{ color: '#FF5252', marginBottom: '16px' }}>
+              <LogOut size={48} strokeWidth={1.5} />
+            </div>
             <h3 style={{ fontSize: '20px', fontWeight: '700', color: COLORS.textDark, margin: '0 0 12px 0' }}>Sign Out?</h3>
             <p style={{ fontSize: '14px', color: COLORS.textMuted, margin: '0 0 24px 0', lineHeight: '1.5' }}>
               Are you sure you want to sign out of StudyVault?
@@ -3007,3 +3660,4 @@ export default function App() {
     </>
   );
 }
+

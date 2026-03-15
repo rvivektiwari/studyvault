@@ -14,7 +14,7 @@ self.addEventListener('install', e => {
   e.waitUntil(
     caches.open(CACHE).then(async c => {
       try {
-        const validAssets = ASSETS.filter(Boolean);
+        const validAssets = ASSETS.filter(path => typeof path === 'string' && path.length > 0);
         await c.addAll(validAssets);
       } catch (error) {
         console.error('Service Worker cache.addAll failed:', error);
