@@ -190,7 +190,6 @@ export default function App() {
   const { signOut } = useClerk();
   const { supabase, isReady } = useSupabase();
 
-
   // rest of your code
 
   
@@ -1230,6 +1229,14 @@ export default function App() {
 
   const totalSaved = entries.length;
   const starred = entries.filter(e => e.starred).length;
+
+  if (!isLoaded) {
+    return (
+      <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '100vh', backgroundColor: COLORS.bg, color: COLORS.textMuted }}>
+        Loading StudyVault...
+      </div>
+    );
+  }
 
   return (
     <>
