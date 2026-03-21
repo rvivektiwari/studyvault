@@ -1,4 +1,6 @@
 import { useState, useEffect, useCallback, useRef } from 'react';
+import { AnimatePresence, motion } from 'framer-motion';
+import confetti from 'canvas-confetti';
 
 import { 
   Home, 
@@ -28,7 +30,8 @@ import {
   BellOff,
   Moon,
   AlertTriangle,
-  FolderOpen
+  FolderOpen,
+  Flame
 } from 'lucide-react';
 
 import { 
@@ -44,31 +47,35 @@ import './index.css';
 
 
 const COLORS = {
-  bg: '#F5F7FA',
-  cardSurface: '#FFFFFF',
-  primary: '#2196F3',
-  primaryLight: '#E3F2FD',
-  accent: '#FF9800',
-  accentLight: '#FFF3E0',
-  teal: '#00BCD4',
-  green: '#4CAF50',
-  textDark: '#1A237E',
-  textPrimary: '#37474F', // textBody
-  textMuted: '#90A4AE',
-  shadow: '0 4px 16px rgba(33,150,243,0.10)',
-  cardBorder: 'transparent', // removed hard borders
-  goldAccent: '#FF9800', // mapped to accent
-  blueAccent: '#2196F3' // mapped to primary
+  bg: 'var(--sv-bg)',
+  cardSurface: 'var(--sv-card-surface)',
+  primary: 'var(--sv-primary)',
+  primaryLight: 'var(--sv-primary-light)',
+  accent: 'var(--sv-accent)',
+  accentLight: 'var(--sv-accent-light)',
+  teal: 'var(--sv-teal)',
+  green: 'var(--sv-green)',
+  greenLight: '#E8F5E9',
+  danger: '#EF4444',
+  dangerLight: '#FEF2F2',
+  textDark: 'var(--sv-text-dark)',
+  textPrimary: 'var(--sv-text-primary)',
+  textBody: 'var(--sv-text-primary)',
+  textMuted: 'var(--sv-text-muted)',
+  shadow: 'var(--sv-shadow)',
+  cardBorder: 'var(--sv-card-border)',
+  goldAccent: 'var(--sv-accent)',
+  blueAccent: 'var(--sv-primary)'
 };
 
 const ICONS = {
-  Home: (props) => <Home size={20} strokeWidth={1.8} {...props} />,
-  Starred: (props) => <Star size={20} strokeWidth={1.8} {...props} />,
-  Search: (props) => <Search size={20} strokeWidth={1.8} {...props} />,
-  Profile: (props) => <User size={20} strokeWidth={1.8} {...props} />,
-  Review: (props) => <RefreshCw size={20} strokeWidth={1.8} {...props} />,
-  Feed: (props) => <Rss size={20} strokeWidth={1.8} {...props} />,
-  StarFilled: (props) => <Star size={20} strokeWidth={1.8} fill="currentColor" {...props} />,
+  Home: (props) => <Home size={19} strokeWidth={2.05} {...props} />,
+  Starred: (props) => <Star size={19} strokeWidth={2.05} {...props} />,
+  Search: (props) => <Search size={19} strokeWidth={2.05} {...props} />,
+  Profile: (props) => <User size={19} strokeWidth={2.05} {...props} />,
+  Review: (props) => <RefreshCw size={19} strokeWidth={2.05} {...props} />,
+  Feed: (props) => <Rss size={19} strokeWidth={2.05} {...props} />,
+  StarFilled: (props) => <Star size={19} strokeWidth={2.05} fill="currentColor" {...props} />,
   Bell: (props) => <Bell size={20} strokeWidth={1.8} {...props} />,
   Upvote: (props) => <ChevronUp size={18} strokeWidth={2.5} {...props} />,
   Best: (props) => <Award size={18} strokeWidth={1.8} {...props} />,
@@ -98,7 +105,7 @@ const SUBJECTS = [
 ];
 
 // Profile Helper Components
-const SettingRow = ({ icon, label, onClick, isDestructive, hasToggle, toggleValue, onToggle, isTheme, currentTheme, onThemeChange }) => (
+const SettingRow = ({ icon, label, onClick, isDestructive, hasToggle, toggleValue, onToggle, isTheme, currentTheme, onThemeChange, children }) => (
   <div 
     onClick={!hasToggle && !isTheme ? onClick : undefined}
     style={{
@@ -113,10 +120,10 @@ const SettingRow = ({ icon, label, onClick, isDestructive, hasToggle, toggleValu
     }}
   >
     <div style={{ display: 'flex', alignItems: 'center', gap: '14px' }}>
-      <span style={{ color: isDestructive ? '#FF5252' : COLORS.primary }}>
+      <span style={{ color: isDestructive ? COLORS.danger : COLORS.textMuted }}>
         {typeof icon === 'string' ? icon : icon({ size: 20 })}
       </span>
-      <span style={{ fontSize: '15px', fontWeight: '500', color: isDestructive ? '#FF5252' : COLORS.textDark }}>{label}</span>
+      <span style={{ fontSize: '15px', fontWeight: '500', color: isDestructive ? COLORS.danger : COLORS.textDark }}>{label}</span>
     </div>
     
     {hasToggle && (
@@ -149,16 +156,18 @@ const SettingRow = ({ icon, label, onClick, isDestructive, hasToggle, toggleValu
       <div style={{ display: 'flex', backgroundColor: COLORS.bg, borderRadius: '10px', padding: '2px' }}>
         <button 
           onClick={() => onThemeChange('light')}
-          style={{ border: 'none', backgroundColor: currentTheme === 'light' ? '#FFF' : 'transparent', borderRadius: '8px', padding: '4px 10px', fontSize: '11px', fontWeight: '600', color: currentTheme === 'light' ? COLORS.primary : COLORS.textMuted, cursor: 'pointer' }}
+          style={{ border: 'none', backgroundColor: currentTheme === 'light' ? '#FFF' : 'transparent', borderRadius: '8px', padding: '4px 10px', fontSize: '11px', fontWeight: '600', color: currentTheme === 'light' ? COLORS.textDark : COLORS.textMuted, cursor: 'pointer' }}
         >Light</button>
         <button 
           onClick={() => onThemeChange('dark')}
-          style={{ border: 'none', backgroundColor: currentTheme === 'dark' ? '#FFF' : 'transparent', borderRadius: '8px', padding: '4px 10px', fontSize: '11px', fontWeight: '600', color: currentTheme === 'dark' ? COLORS.primary : COLORS.textMuted, cursor: 'pointer' }}
+          style={{ border: 'none', backgroundColor: currentTheme === 'dark' ? '#FFF' : 'transparent', borderRadius: '8px', padding: '4px 10px', fontSize: '11px', fontWeight: '600', color: currentTheme === 'dark' ? COLORS.textDark : COLORS.textMuted, cursor: 'pointer' }}
         >Dark</button>
       </div>
     )}
 
-    {!hasToggle && !isTheme && (
+    {children && !hasToggle && !isTheme && children}
+
+    {!children && !hasToggle && !isTheme && (
       <span style={{ color: COLORS.textMuted }}><ICONS.ChevronRight /></span>
     )}
   </div>
@@ -176,7 +185,7 @@ const LongText = ({ text, limit = 300 }) => {
       {shouldCollapse && (
         <button 
           onClick={() => setIsExpanded(!isExpanded)}
-          style={{ background: 'none', border: 'none', color: COLORS.primary, fontSize: '13px', fontWeight: 'bold', cursor: 'pointer', padding: '4px 0', marginTop: '4px' }}
+          style={{ background: 'none', border: 'none', color: COLORS.textMuted, fontSize: '13px', fontWeight: 'bold', cursor: 'pointer', padding: '4px 0', marginTop: '4px' }}
         >
           {isExpanded ? 'Read Less' : 'Read More'}
         </button>
@@ -184,6 +193,354 @@ const LongText = ({ text, limit = 300 }) => {
     </div>
   );
 };
+
+const SkeletonBlock = ({ width = '100%', height = 12, radius = 10, style = {} }) => (
+  <div
+    className="skeleton-block"
+    style={{
+      width,
+      height,
+      borderRadius: radius,
+      ...style
+    }}
+  />
+);
+
+const EntryCardSkeleton = () => (
+  <div className="skeleton-card">
+    <SkeletonBlock width="82%" height={18} radius={8} />
+    <SkeletonBlock width="100%" height={12} radius={7} />
+    <SkeletonBlock width="62%" height={12} radius={7} />
+    <div className="skeleton-row">
+      <div className="skeleton-row">
+        <SkeletonBlock width={76} height={24} radius={999} />
+        <SkeletonBlock width={62} height={18} radius={8} />
+      </div>
+      <SkeletonBlock width={46} height={14} radius={7} />
+    </div>
+  </div>
+);
+
+const FeedCardSkeleton = () => (
+  <div className="skeleton-card">
+    <div className="skeleton-row" style={{ justifyContent: 'space-between', alignItems: 'center' }}>
+      <div className="skeleton-row">
+        <SkeletonBlock width={32} height={32} radius={999} />
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
+          <SkeletonBlock width={110} height={12} radius={7} />
+          <SkeletonBlock width={70} height={10} radius={7} />
+        </div>
+      </div>
+      <SkeletonBlock width={64} height={20} radius={999} />
+    </div>
+    <SkeletonBlock width="74%" height={16} radius={8} />
+    <SkeletonBlock width="100%" height={12} radius={7} />
+    <SkeletonBlock width="68%" height={12} radius={7} />
+  </div>
+);
+
+const NotificationSkeleton = () => (
+  <div className="skeleton-card skeleton-card--compact">
+    <div className="skeleton-row" style={{ alignItems: 'center' }}>
+      <SkeletonBlock width={36} height={36} radius={999} />
+      <div style={{ display: 'flex', flexDirection: 'column', gap: 8, flex: 1 }}>
+        <SkeletonBlock width="88%" height={12} radius={7} />
+        <SkeletonBlock width={92} height={10} radius={7} />
+      </div>
+    </div>
+  </div>
+);
+
+const ProfileSkeleton = () => (
+  <div className="profile-layout">
+    <div className="profile-card skeleton-card" style={{ alignItems: 'center' }}>
+      <SkeletonBlock width={90} height={90} radius={999} style={{ marginBottom: 12 }} />
+      <SkeletonBlock width={160} height={18} radius={8} />
+      <SkeletonBlock width={220} height={12} radius={7} />
+      <SkeletonBlock width={120} height={28} radius={999} style={{ marginTop: 12 }} />
+    </div>
+
+    <div style={{ display: 'contents' }}>
+      <div className="profile-stats">
+        {[0, 1, 2].map((item) => (
+          <div key={item} className="profile-stat-card skeleton-card skeleton-card--compact" style={{ alignItems: 'center' }}>
+            <SkeletonBlock width={44} height={18} radius={7} />
+            <SkeletonBlock width={72} height={10} radius={7} />
+          </div>
+        ))}
+      </div>
+
+      <div className="profile-settings-card skeleton-card">
+        {[0, 1, 2, 3].map((item) => (
+          <div key={item} className="skeleton-row" style={{ justifyContent: 'space-between', padding: '10px 0', borderBottom: item < 3 ? '1px solid rgba(229,231,235,0.7)' : 'none' }}>
+            <div className="skeleton-row">
+              <SkeletonBlock width={20} height={20} radius={999} />
+              <SkeletonBlock width={140} height={12} radius={7} />
+            </div>
+            <SkeletonBlock width={54} height={12} radius={7} />
+          </div>
+        ))}
+      </div>
+    </div>
+  </div>
+);
+
+const EmptyBookIllustration = () => (
+  <div className="empty-book-illustration" aria-hidden="true">
+    <svg viewBox="0 0 180 140" fill="none">
+      <path d="M90 28C74 18 55 16 36 22C28 24 24 31 24 39V106C24 112 29 116 35 114C55 108 74 110 90 120" />
+      <path d="M90 28C106 18 125 16 144 22C152 24 156 31 156 39V106C156 112 151 116 145 114C125 108 106 110 90 120" />
+      <path d="M90 28V120" />
+      <path className="empty-book-line empty-book-line--one" d="M43 48H74" />
+      <path className="empty-book-line empty-book-line--two" d="M43 62H79" />
+      <path className="empty-book-line empty-book-line--three" d="M106 52H137" />
+      <path className="empty-book-line empty-book-line--four" d="M101 66H137" />
+    </svg>
+  </div>
+);
+
+const AvatarStack = ({ profiles = [] }) => (
+  <div className="empty-avatar-stack" aria-hidden="true">
+    {profiles.slice(0, 5).map((member, index) => (
+      <div
+        key={member.user_id || index}
+        className="empty-avatar-stack__item"
+        style={{ zIndex: profiles.length - index }}
+      >
+        {member.avatar_url ? (
+          <img src={member.avatar_url} alt="" />
+        ) : (
+          <span>{(member.display_name || '?')[0].toUpperCase()}</span>
+        )}
+      </div>
+    ))}
+  </div>
+);
+
+const TAB_ITEMS = [
+  { id: 'Home', label: 'Home', shortLabel: 'Home', icon: Home },
+  { id: 'Starred', label: 'Starred', shortLabel: 'Saved', icon: Star },
+  { id: 'Feed', label: 'Feed', shortLabel: 'Feed', icon: Rss },
+  { id: 'Review', label: 'Review', shortLabel: 'Review', icon: RefreshCw },
+  { id: 'Notifications', label: 'Notifications', shortLabel: 'Notifs', icon: Bell },
+  { id: 'Profile', label: 'Profile', shortLabel: 'Profile', icon: User }
+];
+
+const TAB_TITLES = {
+  Home: 'Your Study Vault',
+  Starred: 'Starred Answers',
+  Feed: 'Class Feed',
+  Review: 'Review Queue',
+  Notifications: 'Notifications',
+  Profile: 'Your Profile'
+};
+
+const createTempId = (prefix) => `temp-${prefix}-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
+const PAGE_EASE = [0.32, 0.72, 0, 1];
+const PAGE_DURATION = 0.22;
+const SHEET_SPRING = { type: 'spring', stiffness: 400, damping: 35 };
+const STAR_ON_ANIMATION = { scale: [1, 1.4, 0.9, 1] };
+const STAR_ON_TRANSITION = {
+  duration: 0.24,
+  times: [0, 0.42, 0.75, 1],
+  ease: 'easeOut'
+};
+const STAR_OFF_ANIMATION = { scale: [1, 0.92, 1] };
+const STAR_OFF_TRANSITION = {
+  duration: 0.16,
+  times: [0, 0.55, 1],
+  ease: 'easeOut'
+};
+const BELL_SHAKE_ANIMATION = { rotate: [0, -15, 15, -10, 10, 0] };
+const BELL_SHAKE_TRANSITION = {
+  duration: 0.6,
+  times: [0, 0.18, 0.36, 0.58, 0.78, 1],
+  ease: 'easeInOut'
+};
+const STREAK_MILESTONES = new Set([3, 7, 14, 30]);
+const STREAK_SCHEMA_STORAGE_KEY = 'sv_streak_schema_available';
+const WEB_PUSH_PUBLIC_KEY = import.meta.env.VITE_WEB_PUSH_PUBLIC_KEY || '';
+const HAPTIC_PATTERNS = {
+  starOn: 12,
+  starOff: 8,
+  saveSuccess: [10, 60, 10],
+  deleteEntry: 28,
+  notification: [15, 80, 15, 80, 15],
+  wrongPin: [30, 50, 30]
+};
+const MotionDiv = motion.div;
+const MotionButton = motion.button;
+
+const getLocalDateKey = (date = new Date()) => {
+  const year = date.getFullYear();
+  const month = `${date.getMonth() + 1}`.padStart(2, '0');
+  const day = `${date.getDate()}`.padStart(2, '0');
+  return `${year}-${month}-${day}`;
+};
+
+const parseDateKey = (value) => {
+  if (!value) return null;
+  const [year, month, day] = String(value).split('-').map(Number);
+  if (!year || !month || !day) return null;
+  return new Date(year, month - 1, day);
+};
+
+const diffInCalendarDays = (fromKey, toKey) => {
+  const fromDate = parseDateKey(fromKey);
+  const toDate = parseDateKey(toKey);
+  if (!fromDate || !toDate) return null;
+  return Math.round((toDate - fromDate) / 86400000);
+};
+
+const withStreakDefaults = (profile) => ({
+  ...profile,
+  current_streak: profile?.current_streak ?? 0,
+  last_activity_date: profile?.last_activity_date ?? null,
+  streak_freezes: profile?.streak_freezes ?? 2
+});
+
+const readCachedStreakSchemaAvailability = () => {
+  if (typeof window === 'undefined') return true;
+  const cached = localStorage.getItem(STREAK_SCHEMA_STORAGE_KEY);
+  if (cached === 'false') return false;
+  if (cached === 'true') return true;
+  return true;
+};
+
+const urlBase64ToUint8Array = (base64String) => {
+  const padding = '='.repeat((4 - (base64String.length % 4)) % 4);
+  const base64 = (base64String + padding).replace(/-/g, '+').replace(/_/g, '/');
+  const rawData = window.atob(base64);
+  const outputArray = new Uint8Array(rawData.length);
+  for (let i = 0; i < rawData.length; i += 1) {
+    outputArray[i] = rawData.charCodeAt(i);
+  }
+  return outputArray;
+};
+
+const NavItemButton = ({ item, active, badge, onClick, compact = false, bellShakeKey = 0 }) => {
+  const Icon = item.icon;
+  const isNotificationTab = item.id === 'Notifications';
+
+  return (
+    <button
+      onClick={onClick}
+      className={`press ${compact ? 'mobile-nav-item' : 'desktop-nav-item'} ${active ? 'is-active' : ''}`}
+      style={{
+        position: 'relative',
+        background: 'none',
+        border: 'none',
+        color: active ? COLORS.primary : COLORS.textMuted
+      }}
+    >
+      <span className={compact ? 'mobile-nav-icon' : 'desktop-nav-icon'}>
+        <MotionDiv
+          key={isNotificationTab ? `bell-${bellShakeKey}` : item.id}
+          initial={false}
+          animate={isNotificationTab && bellShakeKey > 0 ? BELL_SHAKE_ANIMATION : { rotate: 0 }}
+          transition={isNotificationTab ? BELL_SHAKE_TRANSITION : { duration: 0.12 }}
+          style={{ display: 'inline-flex' }}
+        >
+          <Icon size={compact ? 21 : 20} strokeWidth={active ? 2.4 : 1.9} />
+        </MotionDiv>
+        {badge > 0 && (
+          <span className="nav-badge">
+            {badge > 99 ? '99+' : badge}
+          </span>
+        )}
+      </span>
+      <span className={compact ? 'mobile-nav-label' : 'desktop-nav-label'}>{compact ? item.shortLabel : item.label}</span>
+    </button>
+  );
+};
+
+const AnimatedSearchField = ({
+  id,
+  name,
+  value,
+  onChange,
+  placeholder,
+  inputRef,
+  isExpanded,
+  onFocus,
+  onBlur,
+  onCancel
+}) => (
+  <div className="search-shell">
+    <MotionDiv
+      className="search-shell__field-wrap"
+      animate={{ width: isExpanded ? '100%' : '90%' }}
+      transition={{ duration: 0.18, ease: PAGE_EASE }}
+      style={{ position: 'relative' }}
+    >
+      <span
+        style={{
+          position: 'absolute',
+          left: '20px',
+          top: '50%',
+          transform: 'translateY(-50%)',
+          color: COLORS.textMuted,
+          display: 'flex',
+          alignItems: 'center',
+          zIndex: 1
+        }}
+      >
+        <ICONS.Search />
+      </span>
+      <input
+        id={id}
+        name={name}
+        ref={inputRef}
+        type="text"
+        placeholder={placeholder}
+        value={value}
+        onChange={(e) => onChange(e.target.value)}
+        onFocus={onFocus}
+        onBlur={onBlur}
+        style={{
+          width: '100%',
+          backgroundColor: COLORS.cardSurface,
+          border: 'none',
+          borderRadius: '20px',
+          padding: '16px 18px 16px 48px',
+          color: COLORS.textPrimary,
+          fontFamily: 'inherit',
+          fontSize: '16px',
+          outline: 'none',
+          transition: 'box-shadow 0.18s ease',
+          boxShadow: COLORS.shadow,
+          minHeight: '56px'
+        }}
+      />
+    </MotionDiv>
+    <AnimatePresence>
+      {isExpanded && (
+        <MotionButton
+          className="search-shell__cancel"
+          type="button"
+          onMouseDown={(e) => e.preventDefault()}
+          onClick={onCancel}
+          initial={{ opacity: 0, x: 10 }}
+          animate={{ opacity: 1, x: 0 }}
+          exit={{ opacity: 0, x: 10 }}
+          transition={{ duration: 0.18, ease: PAGE_EASE }}
+          style={{
+            background: 'none',
+            border: 'none',
+            color: COLORS.primary,
+            fontSize: '14px',
+            fontWeight: '600',
+            fontFamily: 'inherit',
+            cursor: 'pointer',
+            padding: '0 2px'
+          }}
+        >
+          Cancel
+        </MotionButton>
+      )}
+    </AnimatePresence>
+  </div>
+);
 
 export default function App() {
   const { isLoaded, isSignedIn, user } = useUser();
@@ -204,6 +561,8 @@ export default function App() {
   
   // Profile State
   const [profile, setProfile] = useState(null);
+  const [profileLoading, setProfileLoading] = useState(true);
+  const [streakPersistenceAvailable, setStreakPersistenceAvailable] = useState(readCachedStreakSchemaAvailability);
   const [isEditingName, setIsEditingName] = useState(false);
   const [tempName, setTempName] = useState('');
   const [isEditingBio, setIsEditingBio] = useState(false);
@@ -211,26 +570,40 @@ export default function App() {
   const [isUploadingAvatar, setIsUploadingAvatar] = useState(false);
   const [showClerkSettings, setShowClerkSettings] = useState(false);
   const [showSignOutConfirm, setShowSignOutConfirm] = useState(false);
-  const [ svTheme, setSvTheme ] = useState(localStorage.getItem('sv_theme') || 'light');
-  const [ svNotifs, setSvNotifs ] = useState(localStorage.getItem('sv_notifs_enabled') === 'true');
+  const [ svTheme, setSvTheme ] = useState(() => {
+    if (typeof window === 'undefined') return 'light';
+    return localStorage.getItem('sv_theme') || 'light';
+  });
+  const [ svNotifs, setSvNotifs ] = useState(() => {
+    if (typeof window === 'undefined') return false;
+    return localStorage.getItem('sv_notifs_enabled') === 'true';
+  });
   
   // Feed State
   const [feedEntries, setFeedEntries] = useState([]);
+  const [feedLoading, setFeedLoading] = useState(true);
   const [memberCount, setMemberCount] = useState(0);
+  const [classmatePreview, setClassmatePreview] = useState([]);
   const [isSharing, setIsSharing] = useState(false);
   const [feedSearch, setFeedSearch] = useState('');
+  const [feedError, setFeedError] = useState(false);
   const [isSearchVisible, setIsSearchVisible] = useState(false);
 
   
   // Notifications State
   const [notifications, setNotifications] = useState([]);
+  const [notificationsLoading, setNotificationsLoading] = useState(true);
   const [unreadCount, setUnreadCount] = useState(0);
+  const [notificationsError, setNotificationsError] = useState(false);
+  const [pushSupported, setPushSupported] = useState(false);
+  const [pushRegistered, setPushRegistered] = useState(false);
   
   const searchInputRef = useRef(null);
   
   // Answers State
   const [answers, setAnswers] = useState([]);
   const [answersLoading, setAnswersLoading] = useState(false);
+  const [answersError, setAnswersError] = useState(false);
   const [newAnswer, setNewAnswer] = useState('');
   const [isSubmittingAnswer, setIsSubmittingAnswer] = useState(false);
   const [isAnswerFormOpen, setIsAnswerFormOpen] = useState(false);
@@ -239,6 +612,9 @@ export default function App() {
   const [selectedEntry, setSelectedEntry] = useState(null);
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
+  const [cardActionEntry, setCardActionEntry] = useState(null);
+  const [editingEntryId, setEditingEntryId] = useState(null);
+  const [swipeOffsets, setSwipeOffsets] = useState({});
 
   // Add Entry State
   const [showAddEntry, setShowAddEntry] = useState(false);
@@ -246,6 +622,12 @@ export default function App() {
   const [isSaving, setIsSaving] = useState(false);
   const [toast, setToast] = useState({ show: false, message: '', type: '' });
   const [showAIModal, setShowAIModal] = useState(false);
+  const [pageTransition, setPageTransition] = useState({ axis: 'x', direction: 0 });
+  const [hasAnimatedEntryList, setHasAnimatedEntryList] = useState(false);
+  const [activeSearchSurface, setActiveSearchSurface] = useState(null);
+  const [starAnimationState, setStarAnimationState] = useState({ id: null, starred: false });
+  const [bellShakeKey, setBellShakeKey] = useState(0);
+  const [milestoneCelebration, setMilestoneCelebration] = useState(null);
   
   // Form Fields
   const [formQuestion, setFormQuestion] = useState('');
@@ -256,6 +638,11 @@ export default function App() {
   const [imageFile, setImageFile] = useState(null);
   const [imagePreview, setImagePreview] = useState(null);
   const [showLightbox, setShowLightbox] = useState(false);
+  const notificationPermission = typeof Notification !== 'undefined' ? Notification.permission : 'unsupported';
+  const previousTabRef = useRef('Home');
+  const longPressTimerRef = useRef(null);
+  const pointerSessionRef = useRef(null);
+  const suppressCardClickRef = useRef(false);
   
   const showToast = useCallback((message, type) => {
     setToast({ show: true, message, type });
@@ -263,6 +650,356 @@ export default function App() {
       setToast(prev => ({ ...prev, show: false }));
     }, 2500);
   }, []);
+
+  const playHaptic = useCallback((pattern) => {
+    if (typeof navigator === 'undefined' || typeof navigator.vibrate !== 'function') return;
+    navigator.vibrate(pattern);
+  }, []);
+
+  const persistPushSubscription = useCallback(async (subscription) => {
+    if (!user || !subscription) return false;
+    try {
+      const db = supabase;
+      const payload = subscription.toJSON();
+      const { error } = await db.from('push_subscriptions').upsert({
+        user_id: user.id,
+        endpoint: payload.endpoint,
+        subscription: payload,
+        user_agent: typeof navigator !== 'undefined' ? navigator.userAgent : null,
+        updated_at: new Date().toISOString()
+      }, { onConflict: 'endpoint' });
+      if (error) throw error;
+      setPushRegistered(true);
+      return true;
+    } catch (err) {
+      console.error('Persist push subscription error:', err);
+      setPushRegistered(false);
+      return false;
+    }
+  }, [supabase, user]);
+
+  const removePushSubscription = useCallback(async (endpoint) => {
+    if (!user || !endpoint) return;
+    try {
+      const db = supabase;
+      await db.from('push_subscriptions').delete().eq('endpoint', endpoint).eq('user_id', user.id);
+    } catch (err) {
+      console.error('Remove push subscription error:', err);
+    }
+  }, [supabase, user]);
+
+  const syncPushSubscription = useCallback(async ({ requestPermission = false } = {}) => {
+    if (typeof window === 'undefined') return false;
+    const supported = 'serviceWorker' in navigator && 'PushManager' in window && 'Notification' in window && Boolean(WEB_PUSH_PUBLIC_KEY);
+    setPushSupported(supported);
+    if (!supported || !user || !svNotifs) {
+      setPushRegistered(false);
+      return false;
+    }
+
+    let permission = Notification.permission;
+    if (requestPermission && permission === 'default') {
+      permission = await Notification.requestPermission();
+    }
+    if (permission !== 'granted') {
+      setPushRegistered(false);
+      return false;
+    }
+
+    try {
+      const registration = await navigator.serviceWorker.ready;
+      let subscription = await registration.pushManager.getSubscription();
+      if (!subscription) {
+        subscription = await registration.pushManager.subscribe({
+          userVisibleOnly: true,
+          applicationServerKey: urlBase64ToUint8Array(WEB_PUSH_PUBLIC_KEY)
+        });
+      }
+      return await persistPushSubscription(subscription);
+    } catch (err) {
+      console.error('Sync push subscription error:', err);
+      setPushRegistered(false);
+      return false;
+    }
+  }, [persistPushSubscription, svNotifs, user]);
+
+  const disablePushSubscription = useCallback(async () => {
+    if (typeof window === 'undefined' || !('serviceWorker' in navigator)) {
+      setPushRegistered(false);
+      return;
+    }
+    try {
+      const registration = await navigator.serviceWorker.ready;
+      const subscription = await registration.pushManager.getSubscription();
+      if (subscription) {
+        const endpoint = subscription.endpoint;
+        await subscription.unsubscribe();
+        await removePushSubscription(endpoint);
+      }
+    } catch (err) {
+      console.error('Disable push subscription error:', err);
+    } finally {
+      setPushRegistered(false);
+    }
+  }, [removePushSubscription]);
+
+  const triggerWebPush = useCallback(async (notificationsToSend) => {
+    if (!notificationsToSend?.length) return;
+    try {
+      const db = supabase;
+      const { error } = await db.functions.invoke('send-web-push', {
+        body: {
+          notifications: notificationsToSend.map((notif) => ({
+            id: notif.id,
+            user_id: notif.user_id,
+            message: notif.message,
+            type: notif.type,
+            entry_id: notif.entry_id || null
+          }))
+        }
+      });
+      if (error) throw error;
+    } catch (err) {
+      console.error('Trigger web push error:', err);
+    }
+  }, [supabase]);
+
+  const handleNotificationNavigation = useCallback((destinationUrl = '/') => {
+    if (typeof window === 'undefined') return;
+
+    try {
+      const url = new URL(destinationUrl, window.location.origin);
+      const nextTab = url.searchParams.get('tab');
+      const entryId = url.searchParams.get('entry');
+
+      if (nextTab && TAB_ITEMS.some((item) => item.id === nextTab)) {
+        setCurrentTab(nextTab);
+      } else if (entryId) {
+        setCurrentTab('Notifications');
+      }
+
+      if (entryId) {
+        const linkedEntry =
+          entries.find((item) => `${item.id}` === `${entryId}`) ||
+          feedEntries.find((item) => `${item.entry_id || item.id}` === `${entryId}`);
+
+        if (linkedEntry) {
+          setSelectedEntry(linkedEntry.entry_id ? {
+            id: linkedEntry.entry_id,
+            question: linkedEntry.question,
+            answer: linkedEntry.answer,
+            subject: linkedEntry.subject,
+            chapter: linkedEntry.chapter,
+            user_id: linkedEntry.user_id,
+            is_starred: linkedEntry.is_starred,
+            is_public: linkedEntry.is_public,
+            created_at: linkedEntry.created_at
+          } : linkedEntry);
+        }
+      }
+
+      window.history.replaceState({}, '', url.pathname);
+    } catch (err) {
+      console.error('Handle notification navigation error:', err);
+    }
+  }, [entries, feedEntries]);
+
+  const resetEntryComposer = useCallback(() => {
+    setEditingEntryId(null);
+    setFormQuestion('');
+    setFormSubject(SUBJECTS[0]);
+    setFormChapter('');
+    setFormAnswer('');
+    setFormTags('');
+    setImageFile(null);
+    setImagePreview(null);
+    setAddStep(1);
+  }, []);
+
+  const closeEntryComposer = useCallback(() => {
+    setShowAddEntry(false);
+    setTimeout(() => {
+      resetEntryComposer();
+    }, 300);
+  }, [resetEntryComposer]);
+
+  const openEntryEditor = useCallback((entry) => {
+    setEditingEntryId(entry.id);
+    setFormQuestion(entry.question || '');
+    setFormSubject(entry.subject || SUBJECTS[0]);
+    setFormChapter(entry.chapter || '');
+    setFormAnswer(entry.answer || '');
+    setFormTags(Array.isArray(entry.tags) ? entry.tags.join(', ') : (entry.tags || ''));
+    setImageFile(null);
+    setImagePreview(entry.image_url || null);
+    setAddStep(1);
+    setCardActionEntry(null);
+    setShowAddEntry(true);
+  }, []);
+
+  const applyStreakActivity = useCallback(async () => {
+    if (!user || !profile) return null;
+
+    const todayKey = getLocalDateKey();
+    const previousDateKey = profile.last_activity_date || null;
+    const currentStreak = profile.current_streak || 0;
+    const currentFreezes = profile.streak_freezes ?? 2;
+
+    let nextStreak = currentStreak;
+    let nextFreezes = currentFreezes;
+    let usedFreeze = false;
+
+    if (previousDateKey === todayKey) {
+      return { current_streak: currentStreak, streak_freezes: currentFreezes, usedFreeze: false, milestone: null };
+    }
+
+    if (!previousDateKey) {
+      nextStreak = 1;
+    } else {
+      const daysSinceLastActivity = diffInCalendarDays(previousDateKey, todayKey);
+      if (daysSinceLastActivity === 1) {
+        nextStreak = currentStreak + 1;
+      } else if ((daysSinceLastActivity ?? 0) >= 2) {
+        if (currentStreak > 0 && currentFreezes > 0) {
+          nextStreak = currentStreak;
+          nextFreezes = currentFreezes - 1;
+          usedFreeze = true;
+        } else {
+          nextStreak = 1;
+        }
+      }
+    }
+
+    const nextProfile = withStreakDefaults({
+      ...profile,
+      current_streak: nextStreak,
+      streak_freezes: nextFreezes,
+      last_activity_date: todayKey
+    });
+    const previousProfile = profile;
+    setProfile(nextProfile);
+
+    if (!streakPersistenceAvailable) {
+      if (usedFreeze) {
+        showToast('Streak saved by a freeze.', 'success');
+      }
+      const milestone = nextStreak !== currentStreak && STREAK_MILESTONES.has(nextStreak) ? nextStreak : null;
+      if (milestone) {
+        setMilestoneCelebration({ streak: milestone });
+      }
+      return { current_streak: nextStreak, streak_freezes: nextFreezes, usedFreeze, milestone };
+    }
+
+    try {
+      const db = supabase;
+      const { error } = await db
+        .from('profiles')
+        .update({
+          current_streak: nextStreak,
+          streak_freezes: nextFreezes,
+          last_activity_date: todayKey
+        })
+        .eq('user_id', user.id);
+      if (error) throw error;
+
+      if (usedFreeze) {
+        showToast('Streak saved by a freeze.', 'success');
+      }
+
+      const milestone = nextStreak !== currentStreak && STREAK_MILESTONES.has(nextStreak) ? nextStreak : null;
+      if (milestone) {
+        setMilestoneCelebration({ streak: milestone });
+      }
+
+      return { current_streak: nextStreak, streak_freezes: nextFreezes, usedFreeze, milestone };
+    } catch (err) {
+      if (err?.code === '42703') {
+        console.warn('Streak columns are not available in Supabase yet. Falling back to local-only streak state.');
+        setStreakPersistenceAvailable(false);
+        if (usedFreeze) {
+          showToast('Streak saved by a freeze.', 'success');
+        }
+        const milestone = nextStreak !== currentStreak && STREAK_MILESTONES.has(nextStreak) ? nextStreak : null;
+        if (milestone) {
+          setMilestoneCelebration({ streak: milestone });
+        }
+        return { current_streak: nextStreak, streak_freezes: nextFreezes, usedFreeze, milestone };
+      }
+      console.error('Streak update error:', err);
+      setProfile(previousProfile);
+      return null;
+    }
+  }, [profile, showToast, streakPersistenceAvailable, supabase, user]);
+
+  useEffect(() => {
+    document.documentElement.dataset.theme = svTheme;
+    document.documentElement.style.colorScheme = svTheme;
+  }, [svTheme]);
+
+  useEffect(() => {
+    const supported = typeof window !== 'undefined'
+      && 'serviceWorker' in navigator
+      && 'PushManager' in window
+      && 'Notification' in window
+      && Boolean(WEB_PUSH_PUBLIC_KEY);
+    setPushSupported(supported);
+  }, []);
+
+  useEffect(() => {
+    if (typeof window === 'undefined') return;
+    localStorage.setItem(STREAK_SCHEMA_STORAGE_KEY, streakPersistenceAvailable ? 'true' : 'false');
+  }, [streakPersistenceAvailable]);
+
+  useEffect(() => {
+    if (!milestoneCelebration) return undefined;
+
+    confetti({
+      particleCount: 180,
+      spread: 90,
+      startVelocity: 34,
+      origin: { y: 0.62 }
+    });
+
+    const timeoutId = window.setTimeout(() => {
+      setMilestoneCelebration(null);
+    }, 2500);
+
+    return () => window.clearTimeout(timeoutId);
+  }, [milestoneCelebration]);
+
+  useEffect(() => {
+    if (!isReady || !user) return;
+    if (!svNotifs) {
+      disablePushSubscription();
+      return;
+    }
+    if (notificationPermission === 'granted') {
+      syncPushSubscription();
+    }
+  }, [disablePushSubscription, isReady, notificationPermission, svNotifs, syncPushSubscription, user]);
+
+  useEffect(() => {
+    if (typeof window === 'undefined' || !('serviceWorker' in navigator)) return undefined;
+
+    const applyInitialNotificationRoute = () => {
+      if (window.location.search.includes('tab=') || window.location.search.includes('entry=')) {
+        handleNotificationNavigation(window.location.href);
+      }
+    };
+
+    const handleServiceWorkerMessage = (event) => {
+      if (event.data?.type === 'studyvault-notification-click') {
+        handleNotificationNavigation(event.data.url || '/');
+      }
+    };
+
+    applyInitialNotificationRoute();
+    navigator.serviceWorker.addEventListener('message', handleServiceWorkerMessage);
+
+    return () => {
+      navigator.serviceWorker.removeEventListener('message', handleServiceWorkerMessage);
+    };
+  }, [handleNotificationNavigation]);
 
   const fetchEntries = useCallback(async () => {
     if (!user) return;
@@ -274,7 +1011,8 @@ export default function App() {
         .from('entries')
         .select('id, user_id, question, answer, subject, chapter, tags, starred, review_count, last_reviewed, created_at, image_url, is_public')
         .eq('user_id', user.id)
-        .order('created_at', { ascending: false });
+        .order('created_at', { ascending: false })
+        .limit(30);
       
       if (error) throw error;
       setEntries(data || []);
@@ -304,38 +1042,78 @@ export default function App() {
         entry_id: entryId,
         is_read: false,
       }));
-      await db.from('notifications').insert(notifs);
+      const { data: insertedNotifications, error: insertError } = await db
+        .from('notifications')
+        .insert(notifs)
+        .select('id, user_id, message, type, entry_id');
+      if (insertError) throw insertError;
+      await triggerWebPush(insertedNotifications || []);
     } catch (err) {
       console.error('Notify users error:', err);
     }
-  }, [supabase]);
+  }, [supabase, triggerWebPush]);
 
   // Profile Sync
   const fetchProfile = useCallback(async () => {
     if (!user) return;
+    setProfileLoading(true);
     try {
       const db = supabase;
-      const { data, error } = await db
-        .from('profiles')
-        .select('user_id, display_name, avatar_url, bio, reviews_done')
-        .eq('user_id', user.id)
-        .maybeSingle();
+      let data = null;
+      let error = null;
+      let canPersistStreak = streakPersistenceAvailable;
+
+      if (streakPersistenceAvailable) {
+        const streakSelect = await db
+          .from('profiles')
+          .select('user_id, display_name, avatar_url, bio, reviews_done, current_streak, last_activity_date, streak_freezes')
+          .eq('user_id', user.id)
+          .maybeSingle();
+
+        if (streakSelect.error?.code === '42703') {
+          canPersistStreak = false;
+          setStreakPersistenceAvailable(false);
+          const fallbackSelect = await db
+            .from('profiles')
+            .select('user_id, display_name, avatar_url, bio, reviews_done')
+            .eq('user_id', user.id)
+            .maybeSingle();
+          data = fallbackSelect.data ? withStreakDefaults(fallbackSelect.data) : null;
+          error = fallbackSelect.error;
+        } else {
+          setStreakPersistenceAvailable(true);
+          data = streakSelect.data ? withStreakDefaults(streakSelect.data) : null;
+          error = streakSelect.error;
+        }
+      } else {
+        const fallbackSelect = await db
+          .from('profiles')
+          .select('user_id, display_name, avatar_url, bio, reviews_done')
+          .eq('user_id', user.id)
+          .maybeSingle();
+        data = fallbackSelect.data ? withStreakDefaults(fallbackSelect.data) : null;
+        error = fallbackSelect.error;
+      }
 
       if (error) throw error;
       if (!data) {
         // First-time login — create profile
+        const baseProfile = {
+          user_id: user.id,
+          display_name: (user.fullName || user.firstName || 'Student').trim(),
+          avatar_url: user.imageUrl,
+          bio: ''
+        };
+        const insertPayload = canPersistStreak
+          ? { ...baseProfile, current_streak: 0, last_activity_date: null, streak_freezes: 2 }
+          : baseProfile;
         const { data: newProfile, error: insertError } = await db
           .from('profiles')
-          .insert([{
-            user_id: user.id,
-            display_name: (user.fullName || user.firstName || 'Student').trim(),
-            avatar_url: user.imageUrl,
-            bio: ''
-          }])
+          .insert([insertPayload])
           .select()
           .single();
         if (!insertError && newProfile) {
-          setProfile(newProfile);
+          setProfile(withStreakDefaults(newProfile));
           notifyAllUsers(
             user.id,
             null,
@@ -344,12 +1122,14 @@ export default function App() {
           );
         }
       } else {
-        setProfile(data);
+        setProfile(withStreakDefaults(data));
       }
     } catch (err) {
       console.error('Fetch profile error:', err);
+    } finally {
+      setProfileLoading(false);
     }
-  }, [user, supabase, notifyAllUsers]);
+  }, [user, supabase, notifyAllUsers, streakPersistenceAvailable]);
 
 
   const getTimeAgo = (dateStr) => {
@@ -368,6 +1148,25 @@ export default function App() {
   const handleShareToFeed = async (entry) => {
     if (!user) return;
     setIsSharing(true);
+    const updatedEntry = { ...entry, is_public: true };
+    const optimisticFeedItem = {
+      posted_at: new Date().toISOString(),
+      user_id: user.id,
+      entry_id: entry.id,
+      entries: updatedEntry,
+      profiles: {
+        display_name: profile?.display_name || user.firstName || 'You',
+        avatar_url: profile?.avatar_url || user.imageUrl || null
+      }
+    };
+
+    setSelectedEntry(prev => prev?.id === entry.id ? updatedEntry : prev);
+    setEntries(prev => prev.map(e => e.id === entry.id ? updatedEntry : e));
+    setFeedEntries(prev => {
+      if (prev.some(item => item.entry_id === entry.id)) return prev;
+      return [optimisticFeedItem, ...prev];
+    });
+
     try {
       const db = supabase;
       const { error: updateError } = await db
@@ -382,25 +1181,37 @@ export default function App() {
       if (insertError) throw insertError;
 
       showToast('Shared to class feed!', 'success');
+      await applyStreakActivity();
       await notifyAllUsers(user.id, entry.id,
         `${profile?.display_name || user.firstName} shared a new question in ${entry.subject}`);
-      
-      const updatedEntry = { ...entry, is_public: true };
-      setSelectedEntry(updatedEntry);
-      setEntries(prev => prev.map(e => e.id === entry.id ? updatedEntry : e));
+
       if (currentTab === 'Feed') await fetchFeed();
     } catch (err) {
       console.error('Share to feed error:', err);
+      setSelectedEntry(prev => prev?.id === entry.id ? entry : prev);
+      setEntries(prev => prev.map(e => e.id === entry.id ? entry : e));
+      setFeedEntries(prev => prev.filter(item => item.entry_id !== entry.id));
       showToast('Failed to share. Try again.', 'error');
     } finally {
       setIsSharing(false);
     }
   };
 
+  const handleDelete = async () => {
+    if (!selectedEntry) return;
+    await deleteEntryById(selectedEntry, { reopenDetailOnFailure: true });
+  };
+
 
   const handleRemoveFromFeed = async (entry) => {
     if (!user) return;
     setIsSharing(true);
+    const previousFeedEntries = feedEntries;
+
+    setSelectedEntry(prev => prev?.id === entry.id ? { ...prev, is_public: false } : prev);
+    setEntries(prev => prev.map(e => e.id === entry.id ? { ...e, is_public: false } : e));
+    setFeedEntries(prev => prev.filter(item => item.entry_id !== entry.id));
+
     try {
       const db = supabase;
       const { error: updateError } = await db
@@ -416,11 +1227,12 @@ export default function App() {
       if (deleteError) throw deleteError;
 
       showToast('Removed from class feed', 'success');
-      setSelectedEntry(prev => ({ ...prev, is_public: false }));
-      setEntries(prev => prev.map(e => e.id === entry.id ? { ...e, is_public: false } : e));
       if (currentTab === 'Feed') await fetchFeed();
     } catch (err) {
       console.error('Remove from feed error:', err);
+      setSelectedEntry(prev => prev?.id === entry.id ? { ...entry, is_public: true } : prev);
+      setEntries(prev => prev.map(e => e.id === entry.id ? { ...e, is_public: true } : e));
+      setFeedEntries(previousFeedEntries);
       showToast('Failed to remove. Try again.', 'error');
     } finally {
       setIsSharing(false);
@@ -447,6 +1259,7 @@ export default function App() {
       showToast('✓ Notifications enabled!', 'success');
       setSvNotifs(true);
       localStorage.setItem('sv_notifs_enabled', 'true');
+      await syncPushSubscription({ requestPermission: false });
     } else if (permission === 'denied') {
       showToast('Notifications blocked by browser.', 'info');
     }
@@ -457,13 +1270,15 @@ export default function App() {
     showToast('Sending test notification...', 'info');
     try {
       const db = supabase;
-      await db.from('notifications').insert({
+      const { data, error } = await db.from('notifications').insert({
         user_id: user.id,
         from_user_id: user.id,
         type: 'test',
         message: 'This is a test notification from StudyVault! 📚',
         is_read: false
-      });
+      }).select('id, user_id, message, type, entry_id');
+      if (error) throw error;
+      await triggerWebPush(data || []);
     } catch (err) {
       console.error('Test notification error:', err);
       showToast('Test failed.', 'error');
@@ -488,16 +1303,24 @@ export default function App() {
 
   const fetchNotifications = useCallback(async () => {
     if (!user) return;
+    setNotificationsLoading(true);
+    setNotificationsError(false);
     try {
       const db = supabase;
-      const { data } = await db
+      const { data, error } = await db
         .from('notifications')
         .select('*')
         .eq('user_id', user.id)
         .order('created_at', { ascending: false })
         .limit(50);
+      if (error) throw error;
       setNotifications(data || []);
-    } catch (err) { console.error('Fetch notifications error:', err); }
+    } catch (err) {
+      console.error('Fetch notifications error:', err);
+      setNotificationsError(true);
+    } finally {
+      setNotificationsLoading(false);
+    }
   }, [user, supabase]);
 
 
@@ -532,15 +1355,22 @@ export default function App() {
 
 
   const markAsRead = async (notifId) => {
+    const notif = notifications.find(n => n.id === notifId);
+    if (!notif || notif.is_read) return;
+
+    setNotifications(prev => prev.map(n => n.id === notifId ? { ...n, is_read: true } : n));
+    setUnreadCount(prev => Math.max(0, prev - 1));
+
     try {
-      const notif = notifications.find(n => n.id === notifId);
-      if (notif && !notif.is_read) {
-        const db = supabase;
-        await db.from('notifications').update({ is_read: true }).eq('id', notifId);
-        setNotifications(prev => prev.map(n => n.id === notifId ? { ...n, is_read: true } : n));
-        setUnreadCount(prev => Math.max(0, prev - 1));
-      }
-    } catch (err) { console.error('Mark read error:', err); }
+      const db = supabase;
+      const { error } = await db.from('notifications').update({ is_read: true }).eq('id', notifId);
+      if (error) throw error;
+    } catch (err) {
+      console.error('Mark read error:', err);
+      setNotifications(prev => prev.map(n => n.id === notifId ? notif : n));
+      setUnreadCount(prev => prev + 1);
+      showToast('Could not mark notification as read.', 'error');
+    }
   };
 
 
@@ -554,15 +1384,34 @@ export default function App() {
     } catch (err) { console.error('Fetch member count error:', err); }
   }, [supabase]);
 
-
-  const fetchFeed = useCallback(async () => {
+  const fetchClassmatePreview = useCallback(async () => {
     try {
       const db = supabase;
-      const { data } = await db
+      const { data, error } = await db
+        .from('profiles')
+        .select('user_id, display_name, avatar_url')
+        .order('user_id', { ascending: true })
+        .limit(5);
+      if (error) throw error;
+      setClassmatePreview(data || []);
+    } catch (err) {
+      console.error('Fetch classmate preview error:', err);
+      setClassmatePreview([]);
+    }
+  }, [supabase]);
+
+
+  const fetchFeed = useCallback(async () => {
+    setFeedLoading(true);
+    setFeedError(false);
+    try {
+      const db = supabase;
+      const { data, error } = await db
         .from('class_feed')
         .select('posted_at, user_id, entry_id, entries!inner(id, question, answer, subject, chapter, tags, image_url, user_id, is_public), profiles!inner(display_name, avatar_url)')
         .order('posted_at', { ascending: false })
         .limit(50);
+      if (error) throw error;
       
       // Filter out duplicates by entry_id
       const uniqueData = [];
@@ -575,12 +1424,18 @@ export default function App() {
       });
 
       setFeedEntries(uniqueData);
-    } catch (err) { console.error('Fetch feed error:', err); }
+    } catch (err) {
+      console.error('Fetch feed error:', err);
+      setFeedError(true);
+    } finally {
+      setFeedLoading(false);
+    }
   }, [supabase]);
 
   const fetchAnswers = useCallback(async (entryId) => {
     if (!entryId) return;
     setAnswersLoading(true);
+    setAnswersError(false);
     try {
       const db = supabase;
       const { data, error } = await db
@@ -590,7 +1445,9 @@ export default function App() {
           profiles:user_id(display_name, avatar_url),
           votes:answer_votes(user_id, vote_type)
         `)
-        .eq('entry_id', entryId);
+        .eq('entry_id', entryId)
+        .order('created_at', { ascending: false })
+        .limit(100);
       
       if (error) throw error;
       
@@ -614,6 +1471,7 @@ export default function App() {
       setAnswers(sorted);
     } catch (err) {
       console.error('Fetch answers error:', err);
+      setAnswersError(true);
     } finally {
       setAnswersLoading(false);
     }
@@ -698,14 +1556,16 @@ export default function App() {
       
       // Notify question owner
       if (selectedEntry.user_id !== user.id) {
-        await db.from('notifications').insert({
+        const { data: answerNotifications, error: notificationError } = await db.from('notifications').insert({
           user_id: selectedEntry.user_id,
           from_user_id: user.id,
           type: 'new_answer',
           message: `${profile?.display_name || user.firstName} answered your question! 💡`,
           entry_id: selectedEntry.id,
           is_read: false
-        });
+        }).select('id, user_id, message, type, entry_id');
+        if (notificationError) throw notificationError;
+        await triggerWebPush(answerNotifications || []);
       }
     } catch (err) {
       console.error('Submit answer error:', err);
@@ -746,6 +1606,7 @@ export default function App() {
       fetchEntries();
       fetchProfile();
       fetchMemberCount();
+      fetchClassmatePreview();
       fetchFeed();
       fetchUnreadCount();
 
@@ -764,6 +1625,7 @@ export default function App() {
           }, payload => {
             const notif = payload.new;
             setUnreadCount(prev => prev + 1);
+            setBellShakeKey(prev => prev + 1);
             showToast(notif.message, 'info');
             if (Notification.permission === 'granted') {
               new Notification('StudyVault', {
@@ -773,7 +1635,7 @@ export default function App() {
                 renotify: true,
               });
             }
-            if (navigator.vibrate) navigator.vibrate(200);
+            playHaptic(HAPTIC_PATTERNS.notification);
             fetchNotifications();
           })
           .subscribe();
@@ -843,7 +1705,7 @@ export default function App() {
     console.log("Current Tab changed to:", currentTab);
     if (!isReady) return;
     
-    if (currentTab && currentTab.toLowerCase() === 'notifs') {
+    if (currentTab && currentTab.toLowerCase() === 'notifications') {
       console.log("Notifications tab opened: Clearing badge...");
       fetchNotifications();
       // 1. Optimistic UI: Instantly clear the badge
@@ -857,18 +1719,43 @@ export default function App() {
   }, [currentTab, fetchFeed, fetchMemberCount, fetchNotifications, isReady, markAllAsRead]);
 
   useEffect(() => {
-    document.title = "StudyVault — Class X";
-    if (isReady && isSignedIn) {
-      fetchEntries();
+    const previousTab = previousTabRef.current;
+    const horizontalOrder = ['Home', 'Starred', 'Feed', 'Review', 'Notifications'];
+
+    if (currentTab === previousTab) return;
+
+    if (currentTab === 'Profile') {
+      setPageTransition({ axis: 'y', direction: 1 });
+    } else if (previousTab === 'Profile') {
+      setPageTransition({ axis: 'y', direction: -1 });
+    } else {
+      const previousIndex = horizontalOrder.indexOf(previousTab);
+      const currentIndex = horizontalOrder.indexOf(currentTab);
+      setPageTransition({
+        axis: 'x',
+        direction: currentIndex >= previousIndex ? 1 : -1,
+      });
     }
 
+    previousTabRef.current = currentTab;
+  }, [currentTab]);
+
+  useEffect(() => {
+    if (!loading && entries.length > 0 && !hasAnimatedEntryList) {
+      setHasAnimatedEntryList(true);
+    }
+  }, [entries.length, hasAnimatedEntryList, loading]);
+
+  useEffect(() => {
+    document.title = "StudyVault — Class X";
     const handleKeyDown = (e) => {
       // Escape key closes modals/detail
       if (e.key === 'Escape') {
         setShowLightbox(false);
-        setShowAddEntry(false);
+        closeEntryComposer();
         setSelectedEntry(null);
         setShowDeleteConfirm(false);
+        setCardActionEntry(null);
         setShowAIModal(false);
         setShowClerkSettings(false);
         setShowSignOutConfirm(false);
@@ -884,7 +1771,7 @@ export default function App() {
 
     window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);
-  }, [fetchEntries, isReady, isSignedIn]);
+  }, [closeEntryComposer]);
 
 
   const saveName = async () => {
@@ -992,16 +1879,12 @@ export default function App() {
   const handleToggleStar = async (entryToToggle, e) => {
     if (e) e.stopPropagation();
     const newStarredStatus = !entryToToggle.starred;
+    setStarAnimationState({ id: entryToToggle.id, starred: newStarredStatus });
+    playHaptic(newStarredStatus ? HAPTIC_PATTERNS.starOn : HAPTIC_PATTERNS.starOff);
     // Optimistic update
     setEntries(prev => prev.map(en => en.id === entryToToggle.id ? { ...en, starred: newStarredStatus } : en));
     if (selectedEntry?.id === entryToToggle.id) {
       setSelectedEntry(prev => ({ ...prev, starred: newStarredStatus }));
-    }
-    if (e) {
-      const btn = e.currentTarget;
-      btn.style.animation = 'none';
-      void btn.offsetWidth;
-      btn.style.animation = 'starPop 0.3s ease';
     }
     try {
       const db = supabase;
@@ -1018,22 +1901,33 @@ export default function App() {
     }
   };
 
-  const handleDelete = async () => {
-    if (!selectedEntry) return;
+  const deleteEntryById = useCallback(async (entryToDelete, options = {}) => {
+    if (!entryToDelete) return;
+    const previousEntries = entries;
+    const previousFeedEntries = feedEntries;
+    const wasSelectedEntry = selectedEntry?.id === entryToDelete.id;
     setIsDeleting(true);
+    setEntries(prev => prev.filter(e => e.id !== entryToDelete.id));
+    setFeedEntries(prev => prev.filter(f => f.entry_id !== entryToDelete.id));
+    setSwipeOffsets(prev => ({ ...prev, [entryToDelete.id]: 0 }));
+    setCardActionEntry(null);
+    setShowDeleteConfirm(false);
+    if (wasSelectedEntry) {
+      setSelectedEntry(null);
+    }
     try {
       const db = supabase;
 
       // 1. Delete associated image from storage if exists
-      if (selectedEntry.image_url) {
+      if (entryToDelete.image_url) {
         try {
           // Find where the bucket name ends and the file path begins
           const bucketString = 'entry-images/';
-          const pathIndex = selectedEntry.image_url.indexOf(bucketString);
+          const pathIndex = entryToDelete.image_url.indexOf(bucketString);
           
           if (pathIndex !== -1) {
             // Extract strictly the file name/path
-            const filePath = selectedEntry.image_url.substring(pathIndex + bucketString.length);
+            const filePath = entryToDelete.image_url.substring(pathIndex + bucketString.length);
             console.log("Attempting to delete storage file:", filePath);
             
             // Execute deletion
@@ -1054,23 +1948,34 @@ export default function App() {
 
       // 2. Delete database row
       // Database will handle cascading deletions for class_feed, answers, and notifications
-      const { error } = await db.from('entries').delete().eq('id', selectedEntry.id);
+      const { error } = await db.from('entries').delete().eq('id', entryToDelete.id);
       if (error) throw error;
       
       // Update local state
-      setEntries(prev => prev.filter(e => e.id !== selectedEntry.id));
-      setFeedEntries(prev => prev.filter(f => f.entry_id !== selectedEntry.id));
+      setEntries(prev => prev.filter(e => e.id !== entryToDelete.id));
+      setFeedEntries(prev => prev.filter(f => f.entry_id !== entryToDelete.id));
       
       setShowDeleteConfirm(false);
-      setSelectedEntry(null);
+      if (wasSelectedEntry) {
+        setSelectedEntry(null);
+      }
+      playHaptic(HAPTIC_PATTERNS.deleteEntry);
       showToast('✓ Entry deleted', 'success');
     } catch (err) {
       console.error('Delete error:', err);
+      setEntries(previousEntries);
+      setFeedEntries(previousFeedEntries);
+      if (wasSelectedEntry || options.reopenDetailOnFailure) {
+        setSelectedEntry(entryToDelete);
+      }
+      if (wasSelectedEntry) {
+        setShowDeleteConfirm(true);
+      }
       showToast('Delete failed. Try again.', 'error');
     } finally {
       setIsDeleting(false);
     }
-  };
+  }, [entries, feedEntries, playHaptic, selectedEntry, showToast, supabase]);
 
   const handleSaveEntry = async () => {
     if (!formQuestion.trim()) {
@@ -1082,6 +1987,19 @@ export default function App() {
       return;
     }
     setIsSaving(true);
+    const tempId = createTempId('entry');
+    const isEditingEntry = Boolean(editingEntryId);
+    const existingEntry = isEditingEntry ? entries.find(entry => entry.id === editingEntryId) : null;
+    const formSnapshot = {
+      editingEntryId,
+      question: formQuestion,
+      subject: formSubject,
+      chapter: formChapter,
+      answer: formAnswer,
+      tags: formTags,
+      imageFile,
+      imagePreview,
+    };
     
     try {
       const db = supabase;
@@ -1089,7 +2007,7 @@ export default function App() {
         ? formTags.split(',').map(t => t.trim()).filter(Boolean)
         : [];
 
-      let imageUrl = null;
+      let imageUrl = typeof imagePreview === 'string' ? imagePreview : (existingEntry?.image_url || null);
       if (imageFile) {
         // Validate file type
         const allowed = ['image/jpeg', 'image/png', 'image/webp'];
@@ -1127,32 +2045,154 @@ export default function App() {
         subject: formSubject,
         chapter: formChapter.trim() || null,
         tags: parsedTags,
-        user_id: user?.id,
-        starred: false,
-        is_public: false,
+        user_id: existingEntry?.user_id || user?.id,
+        starred: existingEntry?.starred ?? false,
+        is_public: existingEntry?.is_public ?? false,
         image_url: imageUrl,
       };
 
-      const { data, error } = await db.from('entries').insert(newEntry).select();
+      const optimisticEntry = {
+        ...(existingEntry || {}),
+        ...newEntry,
+        id: existingEntry?.id || tempId,
+        created_at: existingEntry?.created_at || new Date().toISOString(),
+        review_count: existingEntry?.review_count || 0,
+        last_reviewed: existingEntry?.last_reviewed || null,
+      };
+
+      if (isEditingEntry) {
+        setEntries(prev => prev.map(entry => entry.id === editingEntryId ? optimisticEntry : entry));
+        setSelectedEntry(prev => prev?.id === editingEntryId ? optimisticEntry : prev);
+        showToast('Saving changes...', 'info');
+      } else {
+        setEntries(prev => [optimisticEntry, ...prev]);
+        showToast('Saving entry...', 'info');
+      }
+      resetEntryComposer();
+      setShowAddEntry(false);
+
+      const query = isEditingEntry
+        ? db.from('entries').update(newEntry).eq('id', editingEntryId).select()
+        : db.from('entries').insert(newEntry).select();
+      const { data, error } = await query;
       
       if (error) throw error;
       
       // Update local state (no longer auto-shares to feed)
       if (data && data.length > 0) {
-        setEntries(prev => [data[0], ...prev]);
-        showToast('✓ Entry saved', 'success');
-        // Reset form
-        setFormQuestion(''); setFormSubject(SUBJECTS[0]); setFormChapter('');
-        setFormAnswer(''); setFormTags(''); setImageFile(null); setImagePreview(null);
-        setAddStep(1); setShowAddEntry(false);
+        const savedEntry = data[0];
+        if (isEditingEntry) {
+          setEntries(prev => prev.map(entry => entry.id === editingEntryId ? savedEntry : entry));
+          setSelectedEntry(prev => prev?.id === editingEntryId ? savedEntry : prev);
+          showToast('Changes saved', 'success');
+        } else {
+          setEntries(prev => prev.map(entry => entry.id === tempId ? savedEntry : entry));
+          playHaptic(HAPTIC_PATTERNS.saveSuccess);
+          await applyStreakActivity();
+          showToast('✓ Entry saved', 'success');
+        }
+        setEditingEntryId(null);
       }
     } catch (err) {
       console.error('Save error:', err);
+      if (isEditingEntry && existingEntry) {
+        setEntries(prev => prev.map(entry => entry.id === editingEntryId ? existingEntry : entry));
+        setSelectedEntry(prev => prev?.id === editingEntryId ? existingEntry : prev);
+      } else {
+        setEntries(prev => prev.filter(entry => entry.id !== tempId));
+      }
+      setEditingEntryId(formSnapshot.editingEntryId);
+      setFormQuestion(formSnapshot.question);
+      setFormSubject(formSnapshot.subject);
+      setFormChapter(formSnapshot.chapter);
+      setFormAnswer(formSnapshot.answer);
+      setFormTags(formSnapshot.tags);
+      setImageFile(formSnapshot.imageFile);
+      setImagePreview(formSnapshot.imagePreview);
+      setAddStep(2);
+      setShowAddEntry(true);
       showToast('Something went wrong. Try again.', 'error');
     } finally {
       setIsSaving(false);
     }
   };
+
+  const handleEntryCardClick = useCallback((entry) => {
+    if (suppressCardClickRef.current) {
+      suppressCardClickRef.current = false;
+      return;
+    }
+    setSelectedEntry(entry);
+  }, []);
+
+  const clearLongPressTimer = useCallback(() => {
+    if (longPressTimerRef.current) {
+      clearTimeout(longPressTimerRef.current);
+      longPressTimerRef.current = null;
+    }
+  }, []);
+
+  const handleCardPointerDown = useCallback((entry, event) => {
+    if (entry.user_id !== user?.id) return;
+    suppressCardClickRef.current = false;
+    pointerSessionRef.current = {
+      entryId: entry.id,
+      startX: event.clientX,
+      startY: event.clientY,
+      width: event.currentTarget.offsetWidth || 1,
+      swiping: false,
+      pointerType: event.pointerType
+    };
+    clearLongPressTimer();
+    longPressTimerRef.current = window.setTimeout(() => {
+      suppressCardClickRef.current = true;
+      setCardActionEntry(entry);
+      setSwipeOffsets(prev => ({ ...prev, [entry.id]: 0 }));
+      pointerSessionRef.current = null;
+    }, 420);
+  }, [clearLongPressTimer, user?.id]);
+
+  const handleCardPointerMove = useCallback((entry, event) => {
+    const session = pointerSessionRef.current;
+    if (!session || session.entryId !== entry.id || entry.user_id !== user?.id) return;
+
+    const deltaX = event.clientX - session.startX;
+    const deltaY = event.clientY - session.startY;
+
+    if (Math.abs(deltaY) > 10 && Math.abs(deltaY) > Math.abs(deltaX)) {
+      clearLongPressTimer();
+      pointerSessionRef.current = null;
+      setSwipeOffsets(prev => ({ ...prev, [entry.id]: 0 }));
+      return;
+    }
+
+    if (deltaX < -12 && Math.abs(deltaX) > Math.abs(deltaY)) {
+      clearLongPressTimer();
+      session.swiping = true;
+      suppressCardClickRef.current = true;
+      const nextOffset = Math.max(deltaX, -session.width * 0.78);
+      setSwipeOffsets(prev => ({ ...prev, [entry.id]: nextOffset }));
+    }
+  }, [clearLongPressTimer, user?.id]);
+
+  const handleCardPointerEnd = useCallback(async (entry) => {
+    const session = pointerSessionRef.current;
+    clearLongPressTimer();
+
+    if (session && session.entryId === entry.id && session.swiping) {
+      const offset = swipeOffsets[entry.id] || 0;
+      pointerSessionRef.current = null;
+      if (Math.abs(offset) >= session.width * 0.6) {
+        await deleteEntryById(entry);
+      } else {
+        setSwipeOffsets(prev => ({ ...prev, [entry.id]: 0 }));
+      }
+      return;
+    }
+
+    pointerSessionRef.current = null;
+    setSwipeOffsets(prev => ({ ...prev, [entry.id]: 0 }));
+  }, [clearLongPressTimer, deleteEntryById, swipeOffsets]);
 
 
   const handleMarkReviewed = async (entry) => {
@@ -1171,6 +2211,7 @@ export default function App() {
         last_reviewed: new Date().toISOString()
       }).eq('id', entry.id);
       if (error) throw error;
+      await applyStreakActivity();
       showToast('Review saved! ✓', 'success');
     } catch (err) {
       console.error('Mark reviewed error:', err);
@@ -1229,11 +2270,36 @@ export default function App() {
 
   const totalSaved = entries.length;
   const starred = entries.filter(e => e.starred).length;
+  const currentPageTitle = TAB_TITLES[currentTab] || 'StudyVault';
+  const currentPageSubtitle = currentTab === 'Home'
+    ? `${filteredEntries.length} saved answers ready to revisit`
+    : currentTab === 'Starred'
+      ? `${starred} starred answers kept handy`
+      : currentTab === 'Feed'
+        ? `${memberCount} members active in the class feed`
+        : currentTab === 'Review'
+          ? `${reviewQueue.length} ${reviewQueue.length === 1 ? 'entry needs' : 'entries need'} review`
+          : currentTab === 'Notifications'
+            ? `${unreadCount} unread notifications`
+            : 'Manage your account and study preferences';
+  const isHomeSearchExpanded = activeSearchSurface === 'home' || searchQuery.length > 0;
+  const isFeedSearchExpanded = activeSearchSurface === 'feed' || feedSearch.length > 0;
+  const currentStreak = profile?.current_streak || 0;
+  const currentStreakFreezes = profile?.streak_freezes ?? 2;
+  const nextReviewDueLabel = new Intl.DateTimeFormat('en-US', { month: 'short', day: 'numeric' }).format(
+    new Date(Date.now() + 24 * 60 * 60 * 1000)
+  );
+  const isDesktopSummaryVisible = !selectedEntry && !showAddEntry && currentTab !== 'Profile';
+  const shouldAnimateEntryCards = !hasAnimatedEntryList && !loading && entries.length > 0 && (currentTab === 'Home' || currentTab === 'Starred');
 
   if (!isLoaded) {
     return (
-      <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '100vh', backgroundColor: COLORS.bg, color: COLORS.textMuted }}>
-        Loading StudyVault...
+      <div className="skeleton-app-shell">
+        <div className="skeleton-app-shell__content">
+          <EntryCardSkeleton />
+          <EntryCardSkeleton />
+          <EntryCardSkeleton />
+        </div>
       </div>
     );
   }
@@ -1241,23 +2307,51 @@ export default function App() {
   return (
     <>
       {/* Clerk Loading State - prevent blank page flash */}
-      {!isLoaded && (
-        <div style={{ minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', backgroundColor: '#F5F7FA' }}>
-          <div style={{ textAlign: 'center' }}>
-            <div className="spinner-blue" style={{ width: '36px', height: '36px', margin: '0 auto 16px' }} />
-            <p style={{ color: '#90A4AE', fontSize: '14px', fontFamily: "'Poppins', sans-serif" }}>Loading StudyVault...</p>
-          </div>
-        </div>
-      )}
+      {!isLoaded && null}
       <SignedIn>
-        <div className="bg-bgsoft" style={{
-          minHeight: '100vh',
-          fontFamily: "'Poppins', sans-serif",
-          color: COLORS.textPrimary,
-          position: 'relative',
-          overflowX: 'hidden',
-          overflowY: 'auto'
-        }}>
+        <div className="app-shell">
+          <aside className="desktop-sidebar">
+            <div className="desktop-sidebar__brand card-base">
+              <div className="desktop-sidebar__logo">SV</div>
+              <div>
+                <div className="desktop-sidebar__title">StudyVault</div>
+                <div className="desktop-sidebar__subtitle">Class X knowledge hub</div>
+              </div>
+            </div>
+
+            <div className="desktop-sidebar__profile card-base">
+              <div className="desktop-sidebar__avatar" onClick={() => setCurrentTab('Profile')}>
+                {(profile?.avatar_url || user?.imageUrl) ? (
+                  <img src={profile?.avatar_url || user?.imageUrl} alt="Avatar" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                ) : (profile?.display_name || user?.firstName || 'U')[0].toUpperCase()}
+              </div>
+              <div className="desktop-sidebar__profile-copy">
+                <div className="desktop-sidebar__profile-name">{profile?.display_name || user?.firstName || 'User'}</div>
+                <div className="desktop-sidebar__profile-email">{user?.primaryEmailAddress?.emailAddress}</div>
+              </div>
+            </div>
+
+            <div className="desktop-sidebar__nav card-base">
+              {TAB_ITEMS.map((item) => (
+                <NavItemButton
+                  key={item.id}
+                  item={item}
+                  active={currentTab === item.id}
+                  badge={item.id === 'Notifications' ? unreadCount : 0}
+                  bellShakeKey={bellShakeKey}
+                  onClick={() => setCurrentTab(item.id)}
+                />
+              ))}
+            </div>
+
+            <button className="desktop-sidebar__add btn-primary press" onClick={() => { resetEntryComposer(); setShowAddEntry(true); }}>
+              <Plus size={18} strokeWidth={2.3} />
+              Add New Entry
+            </button>
+          </aside>
+
+          <div className="app-main-shell">
+            <div className="content-area scroll-native app-main-scroll">
       {/* Toast Notification */}
       <div style={{
         position: 'fixed',
@@ -1279,25 +2373,132 @@ export default function App() {
         {toast.message}
       </div>
 
+      <AnimatePresence>
+        {milestoneCelebration && (
+          <MotionDiv
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            transition={{ duration: 0.2 }}
+            style={{
+              position: 'fixed',
+              inset: 0,
+              zIndex: 120,
+              backgroundColor: 'rgba(15, 23, 42, 0.54)',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              padding: '24px'
+            }}
+          >
+            <MotionDiv
+              initial={{ opacity: 0, scale: 0.9, y: 24 }}
+              animate={{ opacity: 1, scale: 1, y: 0 }}
+              exit={{ opacity: 0, scale: 0.94, y: 12 }}
+              transition={SHEET_SPRING}
+              className="card-base"
+              style={{
+                width: 'min(100%, 360px)',
+                padding: '32px 24px',
+                textAlign: 'center',
+                display: 'flex',
+                flexDirection: 'column',
+                gap: '14px',
+                alignItems: 'center'
+              }}
+            >
+              <div style={{ display: 'inline-flex', alignItems: 'center', justifyContent: 'center', width: '72px', height: '72px', borderRadius: '999px', backgroundColor: COLORS.accentLight, color: COLORS.accent }}>
+                <Flame size={34} strokeWidth={2.2} />
+              </div>
+              <div style={{ fontSize: '42px', lineHeight: 1, fontWeight: '800', color: COLORS.accent }}>
+                {milestoneCelebration.streak}
+              </div>
+              <div style={{ fontSize: '20px', fontWeight: '700', color: COLORS.textDark }}>
+                Streak milestone reached
+              </div>
+              <div style={{ fontSize: '14px', color: COLORS.textMuted, lineHeight: '1.6' }}>
+                You just hit {milestoneCelebration.streak} days in a row. Keep the momentum going.
+              </div>
+            </MotionDiv>
+          </MotionDiv>
+        )}
+      </AnimatePresence>
+
       {/* MAIN CONTENT WRAPPER */}
         
         {/* HOMEPAGE VIEW */}
-        <div className="safe-bottom-pad" style={{ 
+        <div className={`app-page safe-bottom-pad ${currentTab === 'Profile' ? 'app-page-profile' : ''}`} style={{ 
           display: (selectedEntry || showAddEntry) ? 'none' : 'flex', 
           flexDirection: 'column', 
-          gap: '24px',
-          padding: '20px 16px',
+          gap: '24px'
         }}>
+          <div className="desktop-page-header card-base">
+            <div>
+              <div className="desktop-page-header__eyebrow">{currentTab === 'Home' ? 'Welcome back' : 'StudyVault'}</div>
+              <h1 className="desktop-page-header__title">{currentPageTitle}</h1>
+              <p className="desktop-page-header__subtitle">{currentPageSubtitle}</p>
+              {currentTab === 'Home' && currentStreak > 0 && (
+                <div style={{ marginTop: '12px', display: 'inline-flex', alignItems: 'center', gap: '8px', padding: '8px 12px', borderRadius: '999px', backgroundColor: COLORS.accentLight, color: COLORS.accent, fontSize: '13px', fontWeight: '700' }}>
+                  <Flame size={16} strokeWidth={2.2} />
+                  <span>{currentStreak} day streak</span>
+                </div>
+              )}
+            </div>
+            <div className="desktop-page-header__actions">
+              {(currentTab === 'Home' || currentTab === 'Starred') && (
+                <button
+                  onClick={() => {
+                    setIsSearchVisible(!isSearchVisible);
+                    if (!isSearchVisible) {
+                      setActiveSearchSurface('home');
+                      setTimeout(() => searchInputRef.current?.focus(), 100);
+                    } else {
+                      setActiveSearchSurface(null);
+                    }
+                  }}
+                  className="desktop-header-icon press"
+                  style={{
+                    backgroundColor: isSearchVisible ? COLORS.primary : COLORS.cardSurface,
+                    color: isSearchVisible ? '#FFF' : COLORS.textMuted
+                  }}
+                >
+                  <ICONS.Search />
+                </button>
+              )}
+              <button className="btn-primary desktop-page-header__add press" onClick={() => { resetEntryComposer(); setShowAddEntry(true); }}>
+                <Plus size={18} strokeWidth={2.3} />
+                Add Entry
+              </button>
+            </div>
+          </div>
+          <AnimatePresence mode="wait" initial={false}>
+            <MotionDiv
+              key={currentTab}
+              className="page-transition-shell"
+              initial={
+                pageTransition.axis === 'y'
+                  ? { opacity: 0, y: 28 }
+                  : { opacity: 0, x: 24 * pageTransition.direction }
+              }
+              animate={{ opacity: 1, x: 0, y: 0 }}
+              exit={
+                pageTransition.axis === 'y'
+                  ? { opacity: 0, y: -18 * pageTransition.direction }
+                  : { opacity: 0, x: -24 * pageTransition.direction }
+              }
+              transition={{ duration: PAGE_DURATION, ease: PAGE_EASE }}
+            >
           {/* 1. HEADER ROW (Hidden on Search and Profile) */}
           {(currentTab === 'Home' || currentTab === 'Starred') && (
-            <div style={{ 
+            <div className="hero-header" style={{ 
               display: 'flex', 
               justifyContent: 'space-between', 
               alignItems: 'center',
               backgroundColor: COLORS.cardSurface,
-              padding: '20px',
+              padding: '20px 16px 16px',
               borderRadius: '20px',
-              boxShadow: COLORS.shadow
+              boxShadow: COLORS.shadow,
+              borderBottom: '1px solid #E5E7EB'
             }}>
               <div>
                 <div style={{ 
@@ -1317,12 +2518,23 @@ export default function App() {
                 }}>
                   {profile?.display_name || user?.firstName || 'User'} <span style={{ fontWeight: 400, marginLeft: '4px' }}>👋</span>
                 </div>
+                {currentStreak > 0 && (
+                  <div style={{ marginTop: '10px', display: 'inline-flex', alignItems: 'center', gap: '6px', padding: '6px 10px', borderRadius: '999px', backgroundColor: COLORS.accentLight, color: COLORS.accent, fontSize: '12px', fontWeight: '700' }}>
+                    <Flame size={14} strokeWidth={2.2} />
+                    <span>{currentStreak} day streak</span>
+                  </div>
+                )}
               </div>
               <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
                 <button
                   onClick={() => {
                     setIsSearchVisible(!isSearchVisible);
-                    if (!isSearchVisible) setTimeout(() => searchInputRef.current?.focus(), 100);
+                    if (!isSearchVisible) {
+                      setActiveSearchSurface('home');
+                      setTimeout(() => searchInputRef.current?.focus(), 100);
+                    } else {
+                      setActiveSearchSurface(null);
+                    }
                   }}
                   style={{
                     width: '40px',
@@ -1347,8 +2559,8 @@ export default function App() {
                     width: '40px',
                     height: '40px',
                     borderRadius: '50%',
-                    backgroundColor: COLORS.primaryLight,
-                    color: COLORS.primary,
+                    backgroundColor: COLORS.bg,
+                    color: COLORS.textMuted,
                     display: 'flex',
                     alignItems: 'center',
                     justifyContent: 'center',
@@ -1369,12 +2581,15 @@ export default function App() {
 
           {/* 2. PROFILE VIEW */}
           {currentTab === 'Profile' && (
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '24px' }}>
+            profileLoading ? (
+              <ProfileSkeleton />
+            ) : (
+            <div className="profile-layout">
               {/* Profile Card */}
-              <div style={{
+              <div className="profile-card" style={{
                 backgroundColor: COLORS.cardSurface,
                 borderRadius: '24px',
-                padding: '20px 16px',
+                padding: '16px',
                 boxShadow: COLORS.shadow,
                 display: 'flex', 
                 flexDirection: 'column',
@@ -1382,7 +2597,7 @@ export default function App() {
                 position: 'relative',
                 width: '100%'
               }}>
-                <div style={{ position: 'relative', width: '90px', height: '90px', marginBottom: '16px' }}>
+                <div style={{ position: 'relative', width: '90px', height: '90px', marginBottom: '8px' }}>
                   <div style={{
                     width: '90px',
                     height: '90px',
@@ -1402,7 +2617,7 @@ export default function App() {
                   </div>
                   {isUploadingAvatar && (
                     <div style={{ position: 'absolute', inset: 0, backgroundColor: 'rgba(255,255,255,0.7)', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                      <span className="spinner"></span>
+                      <SkeletonBlock width={44} height={44} radius={999} />
                     </div>
                   )}
                   <label style={{
@@ -1425,7 +2640,7 @@ export default function App() {
                 </div>
 
                 {isEditingName ? (
-                  <div style={{ display: 'flex', gap: '8px', marginBottom: '8px' }}>
+                  <div style={{ display: 'flex', gap: '12px', marginBottom: '8px' }}>
                     <input 
                       id="profile-name"
                       name="display_name"
@@ -1466,37 +2681,48 @@ export default function App() {
                   </p>
                 )}
 
-                <div style={{ backgroundColor: COLORS.primaryLight, color: COLORS.primary, padding: '4px 12px', borderRadius: '20px', fontSize: '11px', fontWeight: 'bold', textTransform: 'uppercase' }}>
+                <div style={{ backgroundColor: COLORS.bg, color: COLORS.textMuted, padding: '4px 12px', borderRadius: '20px', fontSize: '11px', fontWeight: 'bold', textTransform: 'uppercase' }}>
                   Class X
+                </div>
+                <div style={{ fontSize: '12px', color: COLORS.textMuted }}>
+                  {currentStreakFreezes} freeze{currentStreakFreezes === 1 ? '' : 's'} left
                 </div>
               </div>
 
               {/* Stats Row */}
-              <div style={{ display: 'flex', gap: '8px', width: '100%' }}>
+              <div className="profile-stats">
                 {[
                   { label: 'My Entries', value: totalSaved },
                   { label: 'My Starred', value: starred },
                   { label: 'Reviews Done', value: profile?.reviews_done || 0 }
                 ].map((stat, i) => (
-                  <div key={i} style={{ flex: 1, backgroundColor: COLORS.cardSurface, padding: '12px 8px', borderRadius: '16px', display: 'flex', flexDirection: 'column', alignItems: 'center', boxShadow: '0 2px 8px rgba(0,0,0,0.04)', minWidth: 0 }}>
-                    <span style={{ fontSize: '16px', fontWeight: 'bold', color: COLORS.primary }}>{stat.value}</span>
+                  <div className="profile-stat-card" key={i} style={{ flex: 1, backgroundColor: COLORS.cardSurface, padding: '12px 8px', borderRadius: '16px', display: 'flex', flexDirection: 'column', alignItems: 'center', boxShadow: '0 2px 8px rgba(0,0,0,0.04)', minWidth: 0 }}>
+                    <span style={{ fontSize: '16px', fontWeight: 'bold', color: COLORS.textDark }}>{stat.value}</span>
                     <span style={{ fontSize: '9px', color: COLORS.textMuted, textAlign: 'center', textTransform: 'uppercase', letterSpacing: '0.3px' }}>{stat.label}</span>
                   </div>
                 ))}
               </div>
 
-              <div style={{ backgroundColor: COLORS.cardSurface, borderRadius: '24px', overflow: 'hidden', boxShadow: COLORS.shadow }}>
+              <div className="profile-settings-card" style={{ backgroundColor: COLORS.cardSurface, borderRadius: '24px', overflow: 'hidden', boxShadow: COLORS.shadow }}>
                 <SettingRow icon={ICONS.Lock} label="Change Password" onClick={() => setShowClerkSettings(true)} />
                 <SettingRow icon={ICONS.Edit} label={`My Review Queue (${reviewQueue.length})`} onClick={() => setCurrentTab('Review')} />
                 <SettingRow icon={ICONS.Bell} label="Notification Status" onClick={() => {
-                  if (Notification.permission === 'default') requestNotificationPermission();
+                  if (notificationPermission === 'default') requestNotificationPermission();
                 }}>
-                  <div style={{ fontSize: '12px', fontWeight: '600', color: Notification.permission === 'granted' ? COLORS.green : '#FF5252' }}>
-                    {Notification.permission === 'granted' ? (svNotifs ? 'ENABLED' : 'MUTED') : Notification.permission.toUpperCase()}
+                  <div style={{ fontSize: '12px', fontWeight: '600', color: notificationPermission === 'granted' && pushRegistered ? COLORS.green : (notificationPermission === 'unsupported' ? COLORS.textMuted : COLORS.danger) }}>
+                    {notificationPermission === 'unsupported'
+                      ? 'UNSUPPORTED'
+                      : notificationPermission !== 'granted'
+                        ? notificationPermission.toUpperCase()
+                        : !svNotifs
+                          ? 'MUTED'
+                          : pushSupported && pushRegistered
+                            ? 'BACKGROUND READY'
+                            : 'FOREGROUND ONLY'}
                   </div>
                 </SettingRow>
                 {/* Enable Browser Notifications button — shown only when not yet granted */}
-                {Notification.permission !== 'granted' && (
+                {notificationPermission !== 'granted' && notificationPermission !== 'unsupported' && (
                   <div style={{ padding: '12px 16px', borderBottom: '1px solid #F0F2F5' }}>
                     <button
                       onClick={requestNotificationPermission}
@@ -1530,7 +2756,12 @@ export default function App() {
                 <SettingRow icon={ICONS.BellOff} label="Mute Notifications" hasToggle toggleValue={!svNotifs} onToggle={() => {
                   const next = !svNotifs;
                   setSvNotifs(next);
-                  localStorage.setItem('sv_notifs_enabled', next);
+                  localStorage.setItem('sv_notifs_enabled', String(next));
+                  if (next) {
+                    syncPushSubscription({ requestPermission: notificationPermission !== 'granted' });
+                  } else {
+                    disablePushSubscription();
+                  }
                 }} />
                 <SettingRow icon={ICONS.Moon} label="App Theme" isTheme currentTheme={svTheme} onThemeChange={(t) => {
                   setSvTheme(t);
@@ -1539,61 +2770,67 @@ export default function App() {
                 <SettingRow icon={ICONS.LogOut} label="Sign Out" isDestructive onClick={() => setShowSignOutConfirm(true)} />
               </div>
             </div>
+            )
           )}
 
 
           {/* 3. CLASS FEED VIEW */}
           {currentTab === 'Feed' && (
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
-              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+            <div className="stack-layout">
+              <div className="section-heading" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                 <div>
                   <h2 style={{ fontSize: '24px', fontWeight: 'bold', color: COLORS.textDark, margin: 0 }}>Class Feed</h2>
                   <p style={{ fontSize: '13px', color: COLORS.textMuted, margin: '2px 0 0 0' }}>{memberCount} members active</p>
                 </div>
-                <div style={{ width: '40px', height: '40px', borderRadius: '50%', backgroundColor: COLORS.cardSurface, display: 'flex', alignItems: 'center', justifyContent: 'center', boxShadow: '0 2px 8px rgba(0,0,0,0.05)', color: COLORS.textMuted }}>
-                  <ICONS.Search />
-                </div>
               </div>
 
               {/* Feed Search */}
-              <div style={{ position: 'relative' }}>
-                <input 
-                  id="feed-search"
-                  name="feed-search"
-                  type="text" 
-                  placeholder="Search the feed..." 
-                  value={feedSearch}
-                  onChange={(e) => setFeedSearch(e.target.value)}
-                  style={{
-                    width: '100%',
-                    backgroundColor: COLORS.cardSurface,
-                    border: 'none',
-                    borderRadius: '16px',
-                    padding: '12px 16px 12px 44px',
-                    fontSize: '14px',
-                    boxShadow: '0 2px 8px rgba(0,0,0,0.04)',
-                    fontFamily: 'inherit'
-                  }}
-                />
-                <span style={{ position: 'absolute', left: '16px', top: '50%', transform: 'translateY(-50%)', color: COLORS.textMuted }}>
-                  <ICONS.Search />
-                </span>
-              </div>
+              <AnimatedSearchField
+                id="feed-search"
+                name="feed-search"
+                value={feedSearch}
+                onChange={setFeedSearch}
+                placeholder="Search the feed..."
+                isExpanded={isFeedSearchExpanded}
+                onFocus={() => setActiveSearchSurface('feed')}
+                onBlur={() => setActiveSearchSurface(prev => (prev === 'feed' ? null : prev))}
+                onCancel={() => {
+                  setFeedSearch('');
+                  setActiveSearchSurface(null);
+                }}
+              />
 
-              {filteredFeedEntries.length === 0 ? (
-                <div style={{ padding: '60px 20px', textAlign: 'center', display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
-                  <Globe size={36} strokeWidth={1.8} style={{ color: '#90A4AE', marginBottom: '16px' }} />
-                  <h3 style={{ fontSize: '18px', fontWeight: '700', color: COLORS.textDark, margin: '0 0 8px 0' }}>Nothing shared yet</h3>
-                  <p style={{ fontSize: '13px', color: COLORS.textMuted, margin: '0 0 24px 0' }}>Be the first to share a Q&A with your class!</p>
+              {feedLoading ? (
+                <div className="stack-list">
+                  {Array.from({ length: 4 }).map((_, index) => (
+                    <FeedCardSkeleton key={index} />
+                  ))}
+                </div>
+              ) : feedError ? (
+                <div style={{ padding: '48px 24px', textAlign: 'center', backgroundColor: COLORS.cardSurface, borderRadius: '18px', border: `1px solid ${COLORS.cardBorder}`, boxShadow: COLORS.shadow }}>
+                  <h3 style={{ fontSize: '18px', fontWeight: '700', color: COLORS.textDark, margin: '0 0 8px 0' }}>Could not load the class feed</h3>
+                  <p style={{ fontSize: '13px', color: COLORS.textMuted, margin: '0 0 20px 0' }}>Check your connection and try again.</p>
+                  <button onClick={fetchFeed} className="btn-primary press" style={{ maxWidth: '220px' }}>Retry Feed</button>
+                </div>
+              ) : filteredFeedEntries.length === 0 ? (
+                <div className="card-base" style={{ padding: '40px 24px', textAlign: 'center', display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
+                  <AvatarStack profiles={classmatePreview} />
+                  <div style={{ fontSize: '13px', color: COLORS.textMuted, margin: classmatePreview.length > 0 ? '0 0 14px 0' : '6px 0 14px 0' }}>
+                    {memberCount} {memberCount === 1 ? 'member' : 'members'} in class
+                  </div>
+                  <h3 style={{ fontSize: '18px', fontWeight: '700', color: COLORS.textDark, margin: '0 0 8px 0' }}>Be the first to share a question with your class.</h3>
+                  <p style={{ fontSize: '13px', color: COLORS.textMuted, margin: '0 0 24px 0' }}>One shared entry can help everyone revise faster.</p>
                   <button 
                     onClick={() => setCurrentTab('Home')}
-                    style={{ backgroundColor: COLORS.primary, color: '#FFF', border: 'none', borderRadius: '12px', padding: '12px 24px', fontSize: '14px', fontWeight: '600' }}
+                    className="btn-primary press"
+                    style={{ maxWidth: '240px' }}
                   >Share an Entry</button>
                 </div>
               ) : (
-                <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
+                <div className="stack-list">
                   {filteredFeedEntries.map((item, idx) => (
                     <div 
+                      className="feed-card"
                       key={idx} 
                       onClick={() => setSelectedEntry(item.entries)}
                       style={{
@@ -1606,7 +2843,7 @@ export default function App() {
                     >
                       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '12px' }}>
                         <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                          <div style={{ width: '32px', height: '32px', borderRadius: '50%', backgroundColor: COLORS.primaryLight, overflow: 'hidden', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '12px', fontWeight: 'bold', color: COLORS.primary }}>
+                          <div style={{ width: '32px', height: '32px', borderRadius: '50%', backgroundColor: COLORS.bg, overflow: 'hidden', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '12px', fontWeight: 'bold', color: COLORS.textMuted }}>
                             {item.profiles.avatar_url ? (
                               <img src={item.profiles.avatar_url} style={{ width: '100%', height: '100%', objectFit: 'cover' }} alt="" />
                             ) : item.profiles.display_name[0].toUpperCase()}
@@ -1616,7 +2853,7 @@ export default function App() {
                             <div style={{ fontSize: '11px', color: COLORS.textMuted }}>{getTimeAgo(item.posted_at)}</div>
                           </div>
                         </div>
-                        <div style={{ backgroundColor: COLORS.primaryLight, color: COLORS.primary, padding: '2px 10px', borderRadius: '10px', fontSize: '10px', fontWeight: 'bold' }}>
+                        <div style={{ backgroundColor: COLORS.greenLight, color: COLORS.green, padding: '2px 10px', borderRadius: '10px', fontSize: '10px', fontWeight: 'bold' }}>
                           {item.entries.subject}
                         </div>
                       </div>
@@ -1627,7 +2864,7 @@ export default function App() {
                         {item.entries.answer}
                       </div>
                       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', borderTop: '1px solid #F0F2F5', paddingTop: '12px' }}>
-                        <div style={{ fontSize: '12px', color: COLORS.primary, fontWeight: '600' }}>View Full Answer →</div>
+                        <div style={{ fontSize: '12px', color: COLORS.textMuted, fontWeight: '600' }}>View Full Answer →</div>
                       </div>
                     </div>
                   ))}
@@ -1638,8 +2875,8 @@ export default function App() {
 
           {/* 5. NOTIFICATIONS VIEW */}
           {currentTab === 'Notifications' && (
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
-              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+            <div className="stack-layout">
+              <div className="section-heading" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                 <h2 style={{ fontSize: '24px', fontWeight: 'bold', color: COLORS.textDark, margin: 0 }}>Notifications</h2>
                 {unreadCount > 0 && (
                   <button 
@@ -1651,14 +2888,26 @@ export default function App() {
                 )}
               </div>
 
-              {notifications.length === 0 ? (
-                <div style={{ padding: '80px 20px', textAlign: 'center', display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
-                  <Bell size={36} strokeWidth={1.8} style={{ color: '#90A4AE', marginBottom: '16px' }} />
-                  <h3 style={{ fontSize: '18px', fontWeight: '700', color: COLORS.textDark, margin: '0 0 8px 0' }}>No notifications yet</h3>
-                  <p style={{ fontSize: '13px', color: COLORS.textMuted, margin: 0 }}>We'll alert you when someone shares a new entry!</p>
+              {notificationsLoading ? (
+                <div className="stack-list">
+                  {Array.from({ length: 5 }).map((_, index) => (
+                    <NotificationSkeleton key={index} />
+                  ))}
+                </div>
+              ) : notificationsError ? (
+                <div style={{ padding: '48px 24px', textAlign: 'center', backgroundColor: COLORS.cardSurface, borderRadius: '18px', border: `1px solid ${COLORS.cardBorder}`, boxShadow: COLORS.shadow }}>
+                  <h3 style={{ fontSize: '18px', fontWeight: '700', color: COLORS.textDark, margin: '0 0 8px 0' }}>Could not load notifications</h3>
+                  <p style={{ fontSize: '13px', color: COLORS.textMuted, margin: '0 0 20px 0' }}>Please try again in a moment.</p>
+                  <button onClick={fetchNotifications} className="btn-primary press" style={{ maxWidth: '240px' }}>Retry Notifications</button>
+                </div>
+              ) : notifications.length === 0 ? (
+                <div className="card-base" style={{ padding: '64px 20px', textAlign: 'center', display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
+                  <Bell size={48} strokeWidth={1.8} style={{ color: COLORS.textMuted, marginBottom: '16px' }} />
+                  <h3 style={{ fontSize: '18px', fontWeight: '700', color: COLORS.textDark, margin: '0 0 8px 0' }}>You are all caught up.</h3>
+                  <p style={{ fontSize: '13px', color: COLORS.textMuted, margin: 0 }}>Notifications will appear when classmates share entries.</p>
                 </div>
               ) : (
-                <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+                <div className="stack-list">
                   {notifications.map((notif) => (
                     <div 
                       key={notif.id}
@@ -1673,7 +2922,7 @@ export default function App() {
 
                       }}
                       style={{
-                        backgroundColor: notif.is_read ? COLORS.cardSurface : COLORS.primaryLight,
+                        backgroundColor: notif.is_read ? COLORS.cardSurface : COLORS.dangerLight,
                         borderRadius: '16px',
                         padding: '14px 16px',
                         display: 'flex',
@@ -1682,14 +2931,14 @@ export default function App() {
                         cursor: 'pointer',
                         transition: 'all 0.2s ease',
                         boxShadow: '0 2px 8px rgba(0,0,0,0.02)',
-                        border: notif.is_read ? 'none' : `1px solid ${COLORS.primaryLight}`
+                        border: notif.is_read ? 'none' : '1px solid #FECACA'
                       }}
                     >
-                      <div style={{ width: '36px', height: '36px', borderRadius: '50%', backgroundColor: COLORS.primary, display: 'flex', alignItems: 'center', justifyContent: 'center', overflow: 'hidden', flexShrink: 0 }}>
+                      <div style={{ width: '36px', height: '36px', borderRadius: '50%', backgroundColor: COLORS.bg, display: 'flex', alignItems: 'center', justifyContent: 'center', overflow: 'hidden', flexShrink: 0 }}>
                         {notif.profiles?.avatar_url ? (
                           <img src={notif.profiles.avatar_url} style={{ width: '100%', height: '100%', objectFit: 'cover' }} alt="" />
                         ) : (
-                          <span style={{ color: '#FFF', fontSize: '14px', fontWeight: 'bold' }}>
+                          <span style={{ color: COLORS.textDark, fontSize: '14px', fontWeight: 'bold' }}>
                             {(notif.profiles?.display_name || '?')[0].toUpperCase()}
                           </span>
                         )}
@@ -1703,7 +2952,7 @@ export default function App() {
                         </div>
                       </div>
                       {!notif.is_read && (
-                        <div style={{ width: '8px', height: '8px', borderRadius: '50%', backgroundColor: COLORS.primary }}></div>
+                        <div style={{ width: '8px', height: '8px', borderRadius: '50%', backgroundColor: COLORS.danger }}></div>
                       )}
                     </div>
                   ))}
@@ -1713,80 +2962,28 @@ export default function App() {
           )}
 
           {/* 4. SEARCH BAR (Shown on Home when toggled or on Feed) */}
-          {((currentTab === 'Home' && isSearchVisible) || (currentTab === 'Feed')) && (
-
-            <div style={{ position: 'relative' }}>
-              <span style={{ 
-                position: 'absolute', 
-                left: '20px', 
-                top: '50%', 
-                transform: 'translateY(-50%)', 
-                color: COLORS.textMuted, 
-                display: 'flex',
-                alignItems: 'center'
-              }}>
-                <ICONS.Search />
-              </span>
-              <input 
+          {(currentTab === 'Home' && isSearchVisible) && (
+            <AnimatedSearchField
                 id="home-search"
                 name="home-search"
-                ref={searchInputRef}
-                type="text" 
-                placeholder="Search your questions..." 
+                inputRef={searchInputRef}
+                placeholder="Search your questions..."
                 value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-                style={{
-                  width: '100%',
-                  backgroundColor: COLORS.cardSurface,
-                  border: 'none',
-                  borderRadius: '20px',
-                  padding: '16px 48px',
-                  color: COLORS.textPrimary,
-                  fontFamily: 'inherit',
-                  fontSize: '15px',
-                  outline: 'none',
-                  transition: 'all 0.3s ease',
-                  boxShadow: COLORS.shadow,
-                  minHeight: '56px'
-                }}
-                onFocus={(e) => {
-                  e.target.style.boxShadow = `0 0 0 2px ${COLORS.primary}, 0 4px 16px rgba(33,150,243,0.2)`;
-                }}
-                onBlur={(e) => {
-                  e.target.style.boxShadow = COLORS.shadow;
+                onChange={setSearchQuery}
+                isExpanded={isHomeSearchExpanded}
+                onFocus={() => setActiveSearchSurface('home')}
+                onBlur={() => setActiveSearchSurface(prev => (prev === 'home' ? null : prev))}
+                onCancel={() => {
+                  setSearchQuery('');
+                  setIsSearchVisible(false);
+                  setActiveSearchSurface(null);
                 }}
               />
-              {searchQuery && (
-                <button 
-                  onClick={() => setSearchQuery('')}
-                  style={{
-                    position: 'absolute', 
-                    right: '16px', 
-                    top: '50%', 
-                    transform: 'translateY(-50%)',
-                    background: COLORS.primaryLight,
-                    borderRadius: '50%',
-                    width: '24px',
-                    height: '24px',
-                    border: 'none', 
-                    color: COLORS.primary, 
-                    cursor: 'pointer',
-                    fontSize: '12px', 
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'center',
-                    fontWeight: 'bold'
-                  }}
-                >
-                  <ICONS.Close size={12} strokeWidth={2.5} />
-                </button>
-              )}
-            </div>
           )}
 
           {/* 4. FILTER ROW (Hidden on Profile, Review, Feed) */}
           {currentTab !== 'Profile' && currentTab !== 'Review' && currentTab !== 'Feed' && (
-            <div className="hide-scrollbar" style={{
+            <div className="hide-scrollbar subject-filter-row" style={{
               display: 'flex',
               gap: '8px',
               overflowX: 'auto',
@@ -1812,10 +3009,20 @@ export default function App() {
                       fontFamily: 'inherit',
                       fontSize: '13px',
                       cursor: 'pointer',
-                      outline: 'none'
+                      outline: 'none',
+                      position: 'relative',
+                      overflow: 'hidden',
+                      paddingBottom: '11px'
                     }}
                   >
-                    {subject}
+                    <span style={{ position: 'relative', zIndex: 1 }}>{subject}</span>
+                    {isSelected && (
+                      <MotionDiv
+                        layoutId="subject-filter-indicator"
+                        className="subject-filter-indicator"
+                        transition={{ type: 'spring', stiffness: 500, damping: 38 }}
+                      />
+                    )}
                   </button>
                 )
               })}
@@ -1824,34 +3031,9 @@ export default function App() {
 
           {/* 5. ENTRIES LIST (Hidden on Profile, Review, Feed) */}
           {currentTab !== 'Profile' && currentTab !== 'Review' && currentTab !== 'Feed' && (
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
+            <div className="entries-grid">
               {loading ? (
-                // Skeleton shimmer
-                Array(3).fill(0).map((_, i) => (
-                  <div key={i} style={{
-                    backgroundColor: COLORS.cardSurface,
-                    borderRadius: '20px',
-                    padding: '20px',
-                    display: 'flex', 
-                    flexDirection: 'column', 
-                    gap: '12px',
-                    boxShadow: COLORS.shadow,
-                    animation: 'shimmer 1.5s infinite linear',
-                    background: `linear-gradient(90deg, ${COLORS.cardSurface} 25%, #F0F4F8 50%, ${COLORS.cardSurface} 75%)`,
-                    backgroundSize: '200% 100%'
-                  }}>
-                    <div style={{ height: '16px', backgroundColor: '#E3E8EE', borderRadius: '4px', width: '80%' }}></div>
-                    <div style={{ height: '12px', backgroundColor: '#E3E8EE', borderRadius: '4px', width: '100%', marginTop: '4px' }}></div>
-                    <div style={{ height: '12px', backgroundColor: '#E3E8EE', borderRadius: '4px', width: '60%' }}></div>
-                    <div style={{ display: 'flex', gap: '8px', marginTop: '8px', justifyContent: 'space-between' }}>
-                      <div style={{ display: 'flex', gap: '8px' }}>
-                        <div style={{ height: '22px', width: '70px', backgroundColor: '#E3E8EE', borderRadius: '12px' }}></div>
-                        <div style={{ height: '22px', width: '50px', backgroundColor: '#E3E8EE', borderRadius: '4px' }}></div>
-                      </div>
-                      <div style={{ height: '14px', width: '40px', backgroundColor: '#E3E8EE', borderRadius: '4px' }}></div>
-                    </div>
-                  </div>
-                ))
+                Array.from({ length: 3 }).map((_, i) => <EntryCardSkeleton key={i} />)
               ) : fetchError ? (
                 // Error State
                 <div style={{
@@ -1887,19 +3069,27 @@ export default function App() {
                 </div>
               ) : entries.length === 0 && !searchQuery ? (
                 // Empty State (Vault completely empty)
-                <div className="animate-fade-in-up" style={{
+                <div className="card-base animate-fade-in-up" style={{
                   textAlign: 'center',
-                  padding: '60px 20px',
+                  padding: '44px 24px',
                   color: COLORS.textMuted,
                   display: 'flex',
                   flexDirection: 'column',
                   alignItems: 'center',
                   gap: '16px'
                 }}>
-                  <BookOpen size={36} strokeWidth={1.8} style={{ color: '#90A4AE', marginBottom: '16px' }} />
-                  <div style={{ fontSize: '15px', lineHeight: '1.6', color: COLORS.textMuted }}>
-                    Your vault is empty.<br/>Tap <span style={{color: COLORS.primary, fontWeight: 'bold'}}>{'+'}</span> to save your first answer!
-                  </div>
+                  <EmptyBookIllustration />
+                  <h3 style={{ margin: 0, fontSize: '20px', fontWeight: '700', color: COLORS.textDark }}>Your vault is empty.</h3>
+                  <p style={{ margin: 0, fontSize: '14px', lineHeight: '1.6', color: COLORS.textMuted, maxWidth: '30rem' }}>
+                    Start by saving your first question.
+                  </p>
+                  <button
+                    onClick={() => { resetEntryComposer(); setShowAddEntry(true); }}
+                    className="btn-primary press"
+                    style={{ maxWidth: '240px' }}
+                  >
+                    Add First Entry
+                  </button>
                 </div>
               ) : filteredEntries.length === 0 ? (
                 // Empty State (No results)
@@ -1960,30 +3150,68 @@ export default function App() {
               ) : (
                 // List Entries
                 filteredEntries.map((entry, idx) => (
-                  <div 
-                    className="animate-fade-in-up border border-borderSoft shadow-soft"
-                    key={entry.id} 
-                    onClick={() => setSelectedEntry(entry)}
+                  <div
+                    key={entry.id}
                     style={{
-                      animationDelay: `${idx * 50}ms`,
+                      position: 'relative',
+                      borderRadius: '18px',
+                      overflow: 'hidden',
+                      backgroundColor: entry.user_id === user?.id ? COLORS.danger : 'transparent'
+                    }}
+                  >
+                  {entry.user_id === user?.id && (
+                    <div style={{
+                      position: 'absolute',
+                      inset: 0,
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'flex-end',
+                      paddingRight: '20px',
+                      color: '#fff'
+                    }}>
+                      <Trash2 size={18} strokeWidth={2.2} />
+                    </div>
+                  )}
+                  <MotionDiv
+                    className="animate-fade-in-up border border-borderSoft shadow-soft entry-card"
+                    initial={shouldAnimateEntryCards ? { opacity: 0, y: 16 } : false}
+                    animate={{
+                      ...(shouldAnimateEntryCards ? { opacity: 1, y: 0 } : {}),
+                      x: swipeOffsets[entry.id] || 0
+                    }}
+                    transition={shouldAnimateEntryCards ? { duration: 0.22, delay: idx * 0.04, ease: PAGE_EASE } : { duration: 0.16 }}
+                    onClick={() => handleEntryCardClick(entry)}
+                    onContextMenu={(e) => {
+                      if (entry.user_id !== user?.id) return;
+                      e.preventDefault();
+                      setCardActionEntry(entry);
+                    }}
+                    onPointerDown={(e) => handleCardPointerDown(entry, e)}
+                    onPointerMove={(e) => handleCardPointerMove(entry, e)}
+                    onPointerUp={() => handleCardPointerEnd(entry)}
+                    onPointerCancel={() => handleCardPointerEnd(entry)}
+                    style={{
                       backgroundColor: COLORS.cardSurface,
                       borderRadius: '18px',
                       padding: '20px',
                       cursor: 'pointer',
                       position: 'relative',
-                      transition: 'transform 0.15s ease, box-shadow 0.15s ease'
+                      transition: 'transform 0.15s ease, box-shadow 0.15s ease',
+                      touchAction: entry.user_id === user?.id ? 'pan-y' : 'auto'
                     }}
                     onMouseOver={(e) => {
                       e.currentTarget.style.transform = 'scale(1.01) translateY(-2px)';
-                      e.currentTarget.style.boxShadow = '0 8px 24px rgba(33,150,243,0.15)';
+                      e.currentTarget.style.boxShadow = '0 8px 24px rgba(15,23,42,0.08)';
                     }}
                     onMouseOut={(e) => {
                       e.currentTarget.style.transform = 'scale(1) translateY(0)';
                       e.currentTarget.style.boxShadow = COLORS.shadow;
                     }}
                   >
-                    <button 
+                    <MotionButton 
                       onClick={(e) => handleToggleStar(entry, e)}
+                      animate={starAnimationState.id === entry.id ? (starAnimationState.starred ? STAR_ON_ANIMATION : STAR_OFF_ANIMATION) : { scale: 1 }}
+                      transition={starAnimationState.id === entry.id ? (starAnimationState.starred ? STAR_ON_TRANSITION : STAR_OFF_TRANSITION) : { duration: 0.12 }}
                       style={{
                         position: 'absolute', 
                         top: '18px', 
@@ -2001,7 +3229,7 @@ export default function App() {
                       }}
                     >
                       {entry.starred ? <ICONS.StarFilled /> : <ICONS.Starred />}
-                    </button>
+                    </MotionButton>
                     
                     <h3 style={{ 
                       margin: '0 0 8px 0', 
@@ -2029,11 +3257,11 @@ export default function App() {
                       {entry.answer}
                     </p>
 
-                    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-                      <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                    <div className="entry-card__meta" style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                      <div className="entry-card__meta-main" style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
                         <span style={{
-                          backgroundColor: COLORS.primaryLight,
-                          color: COLORS.primary,
+                          backgroundColor: COLORS.bg,
+                          color: COLORS.textMuted,
                           padding: '4px 10px',
                           borderRadius: '8px',
                           fontSize: '11px',
@@ -2052,6 +3280,7 @@ export default function App() {
                         {new Date(entry.created_at).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}
                       </div>
                     </div>
+                  </MotionDiv>
                   </div>
                 ))
               )}
@@ -2060,8 +3289,8 @@ export default function App() {
 
           {/* 6. REVIEW QUEUE (Visible only on Review Tab) */}
           {currentTab === 'Review' && (
-            <div className="animate-fade-in-up" style={{ display: 'flex', flexDirection: 'column', gap: '24px', paddingBottom: '24px' }}>
-              <div style={{ textAlign: 'center', marginBottom: '8px' }}>
+            <div className="animate-fade-in-up stack-layout" style={{ paddingBottom: '24px' }}>
+              <div className="section-heading section-heading--center" style={{ textAlign: 'center', marginBottom: '8px' }}>
                 <h2 style={{ margin: '0 0 8px 0', fontSize: '24px', fontWeight: '700', color: COLORS.textDark }}>Review Queue</h2>
                 <p style={{ margin: 0, fontSize: '14px', color: COLORS.textMuted }}>
                   {reviewQueue.length} {reviewQueue.length === 1 ? 'entry needs' : 'entries need'} review today
@@ -2069,22 +3298,25 @@ export default function App() {
               </div>
 
               {reviewQueue.length === 0 ? (
-                <div style={{
-                  backgroundColor: COLORS.primaryLight,
+                <div className="card-base" style={{
+                  backgroundColor: COLORS.greenLight,
                   borderRadius: '20px',
-                  padding: '40px 20px',
+                  padding: '48px 20px',
                   textAlign: 'center',
                   display: 'flex',
                   flexDirection: 'column',
                   alignItems: 'center',
                   gap: '16px'
                 }}>
-                  <div style={{ fontSize: '48px' }}>🎉</div>
-                  <div style={{ color: COLORS.primary, fontWeight: '700', fontSize: '18px' }}>
-                    All caught up! ✓
+                  <Check size={48} strokeWidth={2} style={{ color: COLORS.green }} />
+                  <div style={{ color: COLORS.textDark, fontWeight: '700', fontSize: '18px' }}>
+                    Nothing to review today.
                   </div>
                   <div style={{ color: COLORS.textPrimary, fontSize: '14px' }}>
-                    Come back tomorrow for more reviews.
+                    Come back tomorrow.
+                  </div>
+                  <div style={{ color: COLORS.textMuted, fontSize: '12px' }}>
+                    Next review due: {nextReviewDueLabel}
                   </div>
                 </div>
               ) : (
@@ -2102,8 +3334,8 @@ export default function App() {
                     }}>
                       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                         <span style={{
-                          backgroundColor: COLORS.primaryLight,
-                          color: COLORS.primary,
+                          backgroundColor: COLORS.accentLight,
+                          color: COLORS.accent,
                           padding: '4px 10px',
                           borderRadius: '8px',
                           fontSize: '11px',
@@ -2135,8 +3367,8 @@ export default function App() {
                           onClick={() => setRevealedReviewIds(prev => new Set(prev).add(entry.id))}
                           style={{
                             width: '100%',
-                            backgroundColor: COLORS.primaryLight,
-                            color: COLORS.primary,
+                            backgroundColor: COLORS.bg,
+                            color: COLORS.textDark,
                             border: 'none',
                             borderRadius: '12px',
                             padding: '16px',
@@ -2147,8 +3379,8 @@ export default function App() {
                             marginTop: '8px',
                             transition: 'background-color 0.2s ease'
                           }}
-                          onMouseOver={e => e.currentTarget.style.backgroundColor = '#d0e8fc'}
-                          onMouseOut={e => e.currentTarget.style.backgroundColor = COLORS.primaryLight}
+                          onMouseOver={e => e.currentTarget.style.backgroundColor = '#E5E7EB'}
+                          onMouseOut={e => e.currentTarget.style.backgroundColor = COLORS.bg}
                         >
                           Show Answer
                         </button>
@@ -2195,7 +3427,7 @@ export default function App() {
                               onClick={() => handleMarkReviewed(entry)}
                               style={{
                                 flex: 1,
-                                backgroundColor: '#E8F5E9',
+                                backgroundColor: COLORS.greenLight,
                                 color: COLORS.green,
                                 border: 'none',
                                 borderRadius: '12px',
@@ -2220,6 +3452,45 @@ export default function App() {
               )}
             </div>
           )}
+
+          {isDesktopSummaryVisible && (
+            <aside className="desktop-summary card-base">
+              <div className="desktop-summary__section">
+                <div className="desktop-summary__eyebrow">Overview</div>
+                <h3 className="desktop-summary__title">{currentPageTitle}</h3>
+                <p className="desktop-summary__text">{currentPageSubtitle}</p>
+              </div>
+
+              <div className="desktop-summary__stats">
+                <div className="desktop-summary__stat">
+                  <span className="desktop-summary__stat-value">{totalSaved}</span>
+                  <span className="desktop-summary__stat-label">Saved</span>
+                </div>
+                <div className="desktop-summary__stat">
+                  <span className="desktop-summary__stat-value">{starred}</span>
+                  <span className="desktop-summary__stat-label">Starred</span>
+                </div>
+                <div className="desktop-summary__stat">
+                  <span className="desktop-summary__stat-value">{reviewQueue.length}</span>
+                  <span className="desktop-summary__stat-label">To review</span>
+                </div>
+              </div>
+
+              <div className="desktop-summary__section desktop-summary__tips">
+                <div className="desktop-summary__eyebrow">Quick actions</div>
+                <button className="btn-secondary press" onClick={() => setCurrentTab('Review')}>
+                  <RefreshCw size={16} strokeWidth={2.1} />
+                  Open Review Queue
+                </button>
+                <button className="btn-secondary press" onClick={() => setCurrentTab('Starred')}>
+                  <Star size={16} strokeWidth={2.1} />
+                  View Starred
+                </button>
+              </div>
+            </aside>
+          )}
+            </MotionDiv>
+          </AnimatePresence>
         </div>
       
       {/* DETAIL VIEW OVERLAY */}
@@ -2245,7 +3516,7 @@ export default function App() {
             zIndex: 1,
             maxWidth: '480px',
             margin: '0 auto',
-            minHeight: '100vh',
+            minHeight: '100dvh',
             display: 'flex',
             flexDirection: 'column'
           }}>
@@ -2318,8 +3589,10 @@ export default function App() {
                     🗑️
                   </button>
                 )}
-                <button 
+                <MotionButton 
                   onClick={() => handleToggleStar(selectedEntry)}
+                  animate={starAnimationState.id === selectedEntry.id ? (starAnimationState.starred ? STAR_ON_ANIMATION : STAR_OFF_ANIMATION) : { scale: 1 }}
+                  transition={starAnimationState.id === selectedEntry.id ? (starAnimationState.starred ? STAR_ON_TRANSITION : STAR_OFF_TRANSITION) : { duration: 0.12 }}
                   style={{
                     background: 'none',
                     border: 'none',
@@ -2333,16 +3606,16 @@ export default function App() {
                   }}
                 >
                   {selectedEntry.starred ? <ICONS.StarFilled /> : <ICONS.Starred />}
-                </button>
+                </MotionButton>
               </div>
             </div>
 
             {/* Shared By info (if not owner) */}
             {selectedEntry.user_id !== user.id && (
               <div style={{ padding: '4px 20px', display: 'flex', alignItems: 'center', gap: '8px' }}>
-                <div style={{ backgroundColor: COLORS.primaryLight, padding: '4px 10px', borderRadius: '12px', display: 'flex', alignItems: 'center', gap: '6px' }}>
-                  <span style={{ fontSize: '10px', color: COLORS.primary, fontWeight: '700' }}>SHARED BY</span>
-                  <div style={{ width: '18px', height: '18px', borderRadius: '50%', backgroundColor: COLORS.primary, color: '#FFF', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '8px', fontWeight: 'bold', overflow: 'hidden' }}>
+                <div style={{ backgroundColor: COLORS.bg, padding: '4px 10px', borderRadius: '12px', display: 'flex', alignItems: 'center', gap: '6px' }}>
+                  <span style={{ fontSize: '10px', color: COLORS.textMuted, fontWeight: '700' }}>SHARED BY</span>
+                  <div style={{ width: '18px', height: '18px', borderRadius: '50%', backgroundColor: COLORS.textMuted, color: '#FFF', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '8px', fontWeight: 'bold', overflow: 'hidden' }}>
                     {/* Note: we might not have profiles info in selectedEntry if it came from Home tab, but for shared entries via Feed it might be there */}
                     {/* Actually handleFeedCard sets selectedEntry to item.entries. We should probably pass the whole item? */}
                     {/* For now, just show a generic icon or initials if possible */}
@@ -2397,7 +3670,7 @@ export default function App() {
                         opacity: isDeleting ? 0.7 : 1
                       }}
                     >
-                      {isDeleting ? <span className="spinner"></span> : 'Delete'}
+                      {isDeleting ? 'Deleting...' : 'Delete'}
                     </button>
                   </div>
                 </div>
@@ -2431,7 +3704,7 @@ export default function App() {
                 width: '40px',
                 height: '4px',
                 borderRadius: '2px',
-                backgroundColor: COLORS.primaryLight,
+                backgroundColor: COLORS.bg,
                 margin: '12px 0 24px 0'
               }} />
 
@@ -2489,7 +3762,7 @@ export default function App() {
                           boxShadow: '0 4px 12px rgba(33,150,243,0.3)'
                         }}
                       >
-                        {isSharing ? <span className="spinner"></span> : '🚀 Share to Class Feed'}
+                        {isSharing ? 'Sharing...' : '🚀 Share to Class Feed'}
                       </button>
                     ) : (
                       <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
@@ -2522,7 +3795,7 @@ export default function App() {
                             cursor: 'pointer'
                           }}
                         >
-                          {isSharing ? <span className="spinner"></span> : 'Remove'}
+                          {isSharing ? 'Removing...' : 'Remove'}
                         </button>
                       </div>
                     )}
@@ -2577,8 +3850,8 @@ export default function App() {
                 <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap', marginBottom: '32px' }}>
                   {(Array.isArray(selectedEntry.tags) ? selectedEntry.tags : String(selectedEntry.tags).split(',').map(s=>s.trim())).filter(Boolean).map((tag, idx) => (
                     <span key={idx} style={{
-                      color: COLORS.primary,
-                      backgroundColor: COLORS.primaryLight,
+                      color: COLORS.textMuted,
+                      backgroundColor: COLORS.bg,
                       padding: '6px 14px',
                       borderRadius: '12px',
                       fontSize: '12px',
@@ -2667,14 +3940,33 @@ export default function App() {
                           transition: 'all 0.2s'
                         }}
                       >
-                        {isSubmittingAnswer ? 'Posting...' : 'Post Answer'}
+                        {isSubmittingAnswer ? 'Submitting...' : 'Post Answer'}
                       </button>
                     </div>
                   )}
 
                   {answersLoading ? (
-                    <div style={{ padding: '20px', textAlign: 'center' }}>
-                      <span className="spinner-blue"></span>
+                    <div className="stack-list">
+                      {Array.from({ length: 3 }).map((_, index) => (
+                        <NotificationSkeleton key={index} />
+                      ))}
+                    </div>
+                  ) : answersError ? (
+                    <div style={{ 
+                      padding: '32px 24px',
+                      textAlign: 'center',
+                      backgroundColor: COLORS.cardSurface,
+                      borderRadius: '18px',
+                      border: `1px solid ${COLORS.cardBorder}`,
+                      color: COLORS.textMuted,
+                      boxShadow: COLORS.shadow
+                    }}>
+                      <div style={{ marginBottom: '12px', fontSize: '14px', color: COLORS.textDark, fontWeight: '600' }}>
+                        Could not load answers right now.
+                      </div>
+                      <button onClick={() => fetchAnswers(selectedEntry.id)} className="btn-primary press" style={{ maxWidth: '220px' }}>
+                        Retry Answers
+                      </button>
                     </div>
                   ) : answers.length === 0 ? (
                     <div style={{ 
@@ -2708,14 +4000,14 @@ export default function App() {
                                 width: '28px', 
                                 height: '28px', 
                                 borderRadius: '50%', 
-                                backgroundColor: COLORS.primaryLight, 
+                                backgroundColor: COLORS.bg, 
                                 overflow: 'hidden', 
                                 display: 'flex', 
                                 alignItems: 'center', 
                                 justifyContent: 'center',
                                 fontSize: '10px',
                                 fontWeight: 'bold',
-                                color: COLORS.primary
+                                color: COLORS.textMuted
                               }}>
                                 {ans.profiles?.avatar_url ? (
                                   <img src={ans.profiles.avatar_url} style={{ width: '100%', height: '100%', objectFit: 'cover' }} alt="" />
@@ -2891,6 +4183,68 @@ export default function App() {
         )}
       </div>
 
+      <AnimatePresence>
+        {cardActionEntry && (
+          <MotionDiv
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            transition={{ duration: 0.18 }}
+            onClick={() => setCardActionEntry(null)}
+            style={{
+              position: 'fixed',
+              inset: 0,
+              zIndex: 90,
+              backgroundColor: 'rgba(15, 23, 42, 0.38)',
+              display: 'flex',
+              alignItems: 'flex-end',
+              justifyContent: 'center',
+              padding: '16px'
+            }}
+          >
+            <MotionDiv
+              initial={{ y: '100%' }}
+              animate={{ y: 0 }}
+              exit={{ y: '100%' }}
+              transition={SHEET_SPRING}
+              onClick={(e) => e.stopPropagation()}
+              className="card-base"
+              style={{
+                width: 'min(100%, 420px)',
+                padding: '12px',
+                display: 'flex',
+                flexDirection: 'column',
+                gap: '8px'
+              }}
+            >
+              <div style={{ width: '44px', height: '4px', borderRadius: '999px', backgroundColor: COLORS.cardBorder, alignSelf: 'center', margin: '4px 0 8px' }} />
+              <button className="btn-secondary press" onClick={() => openEntryEditor(cardActionEntry)}>
+                <Pencil size={16} strokeWidth={2} />
+                Edit
+              </button>
+              {cardActionEntry.is_public ? (
+                <button className="btn-secondary press" onClick={() => { handleRemoveFromFeed(cardActionEntry); setCardActionEntry(null); }}>
+                  <Share2 size={16} strokeWidth={2} />
+                  Remove From Feed
+                </button>
+              ) : (
+                <button className="btn-secondary press" onClick={() => { handleShareToFeed(cardActionEntry); setCardActionEntry(null); }}>
+                  <Share2 size={16} strokeWidth={2} />
+                  Share
+                </button>
+              )}
+              <button className="btn-danger press" onClick={() => deleteEntryById(cardActionEntry)}>
+                <Trash2 size={16} strokeWidth={2} />
+                Delete
+              </button>
+              <button className="btn-secondary press" onClick={() => setCardActionEntry(null)}>
+                Cancel
+              </button>
+            </MotionDiv>
+          </MotionDiv>
+        )}
+      </AnimatePresence>
+
       {/* IMAGE LIGHTBOX */}
       {showLightbox && selectedEntry?.image_url && (
         <div
@@ -2945,19 +4299,25 @@ export default function App() {
       )}
 
       {/* ADD ENTRY OVERLAY */}
-      <div style={{
-        position: 'fixed',
-        top: 0,
-        left: 0,
-        width: '100%',
-        height: '100%',
-        zIndex: 60,
-        backgroundColor: COLORS.bg,
-        transform: showAddEntry ? 'translateX(0)' : 'translateX(100%)',
-        transition: 'transform 250ms ease-out',
-        overflowY: 'auto',
-        overflowX: 'hidden'
-      }}>
+      <AnimatePresence>
+      {showAddEntry && (
+      <MotionDiv
+        initial={{ x: '100%' }}
+        animate={{ x: 0 }}
+        exit={{ x: '100%' }}
+        transition={{ duration: PAGE_DURATION, ease: PAGE_EASE }}
+        style={{
+          position: 'fixed',
+          top: 0,
+          left: 0,
+          width: '100%',
+          height: '100%',
+          zIndex: 60,
+          backgroundColor: COLORS.bg,
+          overflowY: 'auto',
+          overflowX: 'hidden'
+        }}
+      >
         {/* Repeating background pattern for overlay not needed for Light theme */}
 
         <div style={{
@@ -2965,7 +4325,7 @@ export default function App() {
             zIndex: 1,
             maxWidth: '480px',
             margin: '0 auto',
-            minHeight: '100vh',
+            minHeight: '100dvh',
             display: 'flex',
             flexDirection: 'column'
         }}>
@@ -2986,15 +4346,7 @@ export default function App() {
                   if (addStep === 2) {
                     setAddStep(1);
                   } else {
-                    setShowAddEntry(false);
-                    setTimeout(() => {
-                      setFormQuestion('');
-                      setFormSubject(SUBJECTS[0]);
-                      setFormChapter('');
-                      setFormAnswer('');
-                      setFormTags('');
-                      setAddStep(1);
-                    }, 300);
+                    closeEntryComposer();
                   }
                 }}
                 style={{
@@ -3017,7 +4369,7 @@ export default function App() {
                 fontWeight: '700',
                 letterSpacing: '-0.3px'
               }}>
-                {addStep === 1 ? 'New Question' : 'The Answer'}
+                {editingEntryId ? (addStep === 1 ? 'Edit Question' : 'Edit Answer') : (addStep === 1 ? 'New Question' : 'The Answer')}
               </div>
               <div style={{ width: '36px' }}></div>
             </div>
@@ -3343,11 +4695,11 @@ export default function App() {
                   >
                     {isSaving ? (
                       <div style={{display:'flex', alignItems:'center', justifyContent:'center', gap:'8px'}}>
-                        <span className="spinner"></span> Saving...
+                        {editingEntryId ? 'Saving changes...' : 'Saving entry...'}
                       </div>
                     ) : (
                       <div style={{display:'flex', alignItems:'center', justifyContent:'center', gap:'8px'}}>
-                         Save to Vault <Check size={18} strokeWidth={2.5} />
+                         {editingEntryId ? 'Save Changes' : 'Save to Vault'} <Check size={18} strokeWidth={2.5} />
                       </div>
                     )}
                   </button>
@@ -3357,33 +4709,44 @@ export default function App() {
 
           </div>
         </div>
-      </div>
+      </MotionDiv>
+      )}
+      </AnimatePresence>
 
       {/* ASK AI BOTTOM SHEET MODAL */}
-      <div style={{
-        position: 'fixed',
-        top: 0, left: 0, right: 0, bottom: 0,
-        backgroundColor: 'rgba(0,0,0,0.8)',
-        zIndex: 100,
-        opacity: showAIModal ? 1 : 0,
-        pointerEvents: showAIModal ? 'auto' : 'none',
-        transition: 'opacity 300ms ease',
-        display: 'flex',
-        flexDirection: 'column',
-        justifyContent: 'flex-end'
-      }}>
-        <div style={{
-          backgroundColor: COLORS.cardSurface,
-          borderTopLeftRadius: '24px',
-          borderTopRightRadius: '24px',
-          padding: '24px',
-          transform: showAIModal ? 'translateY(0)' : 'translateY(100%)',
-          transition: 'transform 300ms ease',
+      <AnimatePresence>
+      {showAIModal && (
+      <MotionDiv
+        initial={{ opacity: 0 }}
+        animate={{ opacity: 1 }}
+        exit={{ opacity: 0 }}
+        transition={{ duration: 0.18 }}
+        style={{
+          position: 'fixed',
+          top: 0, left: 0, right: 0, bottom: 0,
+          backgroundColor: 'rgba(0,0,0,0.8)',
+          zIndex: 100,
           display: 'flex',
           flexDirection: 'column',
-          gap: '20px',
-          paddingBottom: 'max(24px, env(safe-area-inset-bottom))'
-        }}>
+          justifyContent: 'flex-end'
+        }}
+      >
+        <MotionDiv
+          initial={{ y: '100%' }}
+          animate={{ y: 0 }}
+          exit={{ y: '100%' }}
+          transition={SHEET_SPRING}
+          style={{
+            backgroundColor: COLORS.cardSurface,
+            borderTopLeftRadius: '24px',
+            borderTopRightRadius: '24px',
+            padding: '24px',
+            display: 'flex',
+            flexDirection: 'column',
+            gap: '20px',
+            paddingBottom: 'max(24px, env(safe-area-inset-bottom))'
+          }}
+        >
           {/* Quote box */}
           <div style={{
             backgroundColor: COLORS.bg,
@@ -3457,141 +4820,73 @@ export default function App() {
           >
             Cancel
           </button>
-        </div>
-      </div>
+        </MotionDiv>
+      </MotionDiv>
+      )}
+      </AnimatePresence>
 
-      {/* BOTTOM NAVIGATION BAR */}
-      <div className="no-select" style={{
-        position: 'fixed',
-        bottom: 0,
-        left: '50%',
-        transform: 'translateX(-50%)',
-        width: '100%',
-        maxWidth: '480px',
-        backgroundColor: 'rgba(255, 255, 255, 0.97)',
-        backdropFilter: 'blur(12px)',
-        borderTopLeftRadius: '30px',
-        borderTopRightRadius: '30px',
-        display: 'flex',
-        justifyContent: 'space-around',
-        alignItems: 'center',
-        padding: `10px 10px max(env(safe-area-inset-bottom), 8px)`,
-        zIndex: 40,
-        boxShadow: '0 -6px 24px rgba(0,0,0,0.08)'
-      }}>
-        {[
-          { id: 'Home', icon: ICONS.Home },
-          { id: 'Feed', icon: ICONS.Feed },
-          { id: 'Add', icon: () => <Plus size={26} color="white" strokeWidth={1.8} />, isAction: true },
-          { id: 'Notifs', icon: ICONS.Bell, badge: unreadCount, label: 'Notifications' },
-          { id: 'Profile', icon: ICONS.Profile }
-        ].map(tab => {
-          if (tab.isAction) {
-            return (
-              <div key={tab.id} style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', width: '20%' }}>
-                <button
-                  onClick={() => setShowAddEntry(true)}
-                  style={{
-                    backgroundColor: COLORS.primary,
-                    border: 'none',
-                    width: '56px',
-                    height: '56px',
-                    borderRadius: '28px',
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'center',
-                    cursor: 'pointer',
-                    color: '#fff',
-                    boxShadow: '0 8px 24px rgba(33,150,243,0.3)',
-                    transform: 'translateY(-12px)',
-                    transition: 'transform 0.2s ease, box-shadow 0.2s ease',
-                  }}
-                  onMouseOver={(e) => {
-                    e.currentTarget.style.transform = 'translateY(-14px) scale(1.05)';
-                    e.currentTarget.style.boxShadow = '0 12px 28px rgba(33,150,243,0.4)';
-                  }}
-                  onMouseOut={(e) => {
-                    e.currentTarget.style.transform = 'translateY(-12px) scale(1)';
-                    e.currentTarget.style.boxShadow = '0 8px 24px rgba(33,150,243,0.3)';
-                  }}
-                >
-                  <tab.icon />
-                </button>
-              </div>
-            );
-          }
+      <nav className="mobile-bottom-nav nav-bar no-select">
+        <div className="mobile-bottom-nav__inner">
+          <NavItemButton
+            item={TAB_ITEMS[0]}
+            active={currentTab === 'Home'}
+            badge={0}
+            bellShakeKey={bellShakeKey}
+            onClick={() => setCurrentTab('Home')}
+            compact
+          />
+          <NavItemButton
+            item={TAB_ITEMS[2]}
+            active={currentTab === 'Feed'}
+            badge={0}
+            bellShakeKey={bellShakeKey}
+            onClick={() => setCurrentTab('Feed')}
+            compact
+          />
 
-          const isActive = currentTab === tab.id;
-          return (
-            <button
-              key={tab.id}
-              onClick={() => {
-                setCurrentTab(tab.id);
-                if (tab.id === 'Home') {
-                  // Keep search visible if it was open, or let user toggle it
-                }
-              }}
-              className="no-select"
-              style={{
-                background: 'none',
-                border: 'none',
-                display: 'flex',
-                flexDirection: 'column',
-                alignItems: 'center',
-                justifyContent: 'center',
-                gap: '2px',
-                color: isActive ? '#2563EB' : '#90A4AE',
-                cursor: 'pointer',
-                fontFamily: "'Poppins', sans-serif",
-                width: '20%',
-                height: '100%',
-                padding: '0'
-              }}
+          <div className="mobile-bottom-nav__center">
+            <MotionButton
+              onClick={() => { resetEntryComposer(); setShowAddEntry(true); }}
+              className="mobile-bottom-nav__fab press"
+              animate={entries.length === 0 ? { scale: [1, 1.07, 1] } : { scale: 1 }}
+              transition={entries.length === 0 ? { duration: 2, repeat: Infinity, ease: 'easeInOut' } : { duration: 0.2 }}
             >
-              <div style={{
-                position: 'relative',
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-                padding: '4px'
-              }}>
-                <tab.icon />
-                {tab.badge > 0 && (
-                  <div style={{
-                    position: 'absolute',
-                    top: '-2px',
-                    right: '-4px',
-                    backgroundColor: '#FF5252',
-                    color: '#FFF',
-                    fontSize: '9px',
-                    fontWeight: 'bold',
-                    borderRadius: '10px',
-                    minWidth: '14px',
-                    height: '14px',
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'center',
-                    lineHeight: '1',
-                    boxShadow: '0 2px 4px rgba(255,82,82,0.3)',
-                    padding: '0 3px',
-                    zIndex: 2
-                  }}>
-                    {tab.badge}
-                  </div>
-                )}
-              </div>
-              <span style={{ fontSize: '10px', fontWeight: isActive ? '600' : '500' }}>
-                {tab.label || tab.id}
-              </span>
-            </button>
-          )
-        })}
-      </div>
+              <Plus size={26} color="white" strokeWidth={2.5} />
+            </MotionButton>
+          </div>
+
+          <NavItemButton
+            item={TAB_ITEMS[4]}
+            active={currentTab === 'Notifications'}
+            badge={unreadCount}
+            bellShakeKey={bellShakeKey}
+            onClick={() => setCurrentTab('Notifications')}
+            compact
+          />
+          <NavItemButton
+            item={TAB_ITEMS[5]}
+            active={currentTab === 'Profile'}
+            badge={0}
+            bellShakeKey={bellShakeKey}
+            onClick={() => setCurrentTab('Profile')}
+            compact
+          />
+        </div>
+      </nav>
+            </div>
+          </div>
+        </div>
 
 
       {/* CLERK USER PROFILE SETTINGS OVERLAY */}
+      <AnimatePresence>
       {showClerkSettings && (
-        <div style={{
+        <MotionDiv
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          exit={{ opacity: 0 }}
+          transition={{ duration: 0.18 }}
+          style={{
           position: 'fixed',
           inset: 0,
           backgroundColor: 'rgba(0,0,0,0.5)',
@@ -3601,7 +4896,12 @@ export default function App() {
           justifyContent: 'center',
           padding: '20px'
         }} onClick={() => setShowClerkSettings(false)}>
-          <div style={{ 
+          <MotionDiv
+            initial={{ scale: 0.96, y: 20 }}
+            animate={{ scale: 1, y: 0 }}
+            exit={{ scale: 0.96, y: 20 }}
+            transition={SHEET_SPRING}
+            style={{ 
             backgroundColor: '#FFF', 
             borderRadius: '24px', 
             width: '100%', 
@@ -3629,13 +4929,20 @@ export default function App() {
               }}
             >✕</button>
             <UserProfile routing="hash" />
-          </div>
-        </div>
+          </MotionDiv>
+        </MotionDiv>
       )}
+      </AnimatePresence>
 
       {/* SIGN OUT CONFIRMATION OVERLAY */}
+      <AnimatePresence>
       {showSignOutConfirm && (
-        <div style={{
+        <MotionDiv
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          exit={{ opacity: 0 }}
+          transition={{ duration: 0.18 }}
+          style={{
           position: 'fixed',
           inset: 0,
           backgroundColor: 'rgba(0,0,0,0.5)',
@@ -3645,7 +4952,12 @@ export default function App() {
           justifyContent: 'center',
           padding: '20px'
         }} onClick={() => setShowSignOutConfirm(false)}>
-          <div style={{
+          <MotionDiv
+            initial={{ scale: 0.96, y: 20 }}
+            animate={{ scale: 1, y: 0 }}
+            exit={{ scale: 0.96, y: 20 }}
+            transition={SHEET_SPRING}
+            style={{
             backgroundColor: '#FFF',
             borderRadius: '24px',
             padding: '32px 24px',
@@ -3689,10 +5001,10 @@ export default function App() {
                 }}
               >Stay Logged In</button>
             </div>
-          </div>
-        </div>
+          </MotionDiv>
+        </MotionDiv>
       )}
-      </div>
+      </AnimatePresence>
       </SignedIn>
       <SignedOut>
         <RedirectToSignIn />
