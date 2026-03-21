@@ -255,6 +255,9 @@
 
 .app-shell--standalone {
   min-height: 100svh;
+  background:
+    linear-gradient(180deg, rgba(255, 255, 255, 0.92), rgba(243, 244, 246, 0.98)),
+    var(--sv-bg);
 }
 
 .app-shell--standalone .content-area {
@@ -262,8 +265,12 @@
 }
 
 .app-shell--standalone .app-page {
-  padding-top: calc(16px + env(safe-area-inset-top, 0px));
+  padding-top: calc(8px + env(safe-area-inset-top, 0px));
   padding-bottom: calc(124px + env(safe-area-inset-bottom, 0px));
+}
+
+.app-shell--standalone .hero-header {
+  margin-top: 4px;
 }
 
 .desktop-sidebar,
@@ -443,6 +450,11 @@
 .app-shell--standalone .mobile-bottom-nav__inner {
   min-height: 84px;
   padding-bottom: calc(12px + env(safe-area-inset-bottom, 0px));
+}
+
+.app-shell--standalone .mobile-bottom-nav {
+  background: color-mix(in srgb, var(--sv-card-surface) 96%, white 4%);
+  box-shadow: 0 -12px 30px rgba(15, 23, 42, 0.10);
 }
 
 .mobile-bottom-nav__center {

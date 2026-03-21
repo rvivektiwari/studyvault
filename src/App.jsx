@@ -1535,22 +1535,28 @@ export default function App() {
     try {
       if (newVote === 0) {
         // Delete vote
-        await db.from('answer_votes').delete().eq('answer_id', answerId).eq('user_id', user.id);
+        const { error } = await db
+          .from('answer_votes')
+          .delete()
+          .eq('answer_id', answerId)
+          .eq('user_id', user.id);
+        if (error) throw error;
       } else {
-        // Upsert vote (using the UNIQUE constraint we added in Step 1)
-        await db.from('answer_votes').upsert({
+        const { error } = await db.from('answer_votes').upsert({
           answer_id: answerId,
           user_id: user.id,
           vote_type: newVote
         }, { onConflict: 'answer_id, user_id' });
+        if (error) throw error;
       }
+      fetchAnswers(selectedEntry?.id || answer.entry_id);
     } catch (err) {
       console.error('Vote error:', err);
       // Revert if failed
       setAnswers(oldAnswers);
       showToast('Voting failed. Try again.', 'error');
     }
-  }, [supabase, answers, user, showToast]);
+  }, [answers, fetchAnswers, selectedEntry?.id, showToast, supabase, user]);
 
   const handleSetBestAnswer = async (answerId) => {
     if (!selectedEntry || selectedEntry.user_id !== user.id) return;
@@ -1591,6 +1597,7 @@ export default function App() {
       
       // Notify question owner
       if (selectedEntry.user_id !== user.id) {
+        try {
         const { data: answerNotifications, error: notificationError } = await db.from('notifications').insert({
           user_id: selectedEntry.user_id,
           from_user_id: user.id,
@@ -1601,6 +1608,9 @@ export default function App() {
         }).select('id, user_id, message, type, entry_id');
         if (notificationError) throw notificationError;
         await triggerWebPush(answerNotifications || []);
+        } catch (notificationErr) {
+          console.error('Answer notification error:', notificationErr);
+        }
       }
     } catch (err) {
       console.error('Submit answer error:', err);
@@ -1758,6 +1768,15 @@ export default function App() {
     const horizontalOrder = ['Home', 'Starred', 'Feed', 'Review', 'Notifications'];
 
     if (currentTab === previousTab) return;
+
+    setSelectedEntry(null);
+    setShowDeleteConfirm(false);
+    setCardActionEntry(null);
+    setShowAddEntry(false);
+    setShowAIModal(false);
+    setShowLightbox(false);
+    setIsAnswerFormOpen(false);
+    setActiveSearchSurface(null);
 
     if (currentTab === 'Profile') {
       setPageTransition({ axis: 'y', direction: 1 });
@@ -2898,6 +2917,22 @@ export default function App() {
                       <div style={{ fontSize: '12px', color: COLORS.textPrimary, opacity: 0.8, marginBottom: '12px', display: '-webkit-box', WebkitLineClamp: '2', WebkitBoxOrient: 'vertical', overflow: 'hidden' }}>
                         {item.entries.answer}
                       </div>
+                      {item.entries.image_url && (
+                        <div style={{ marginBottom: '12px' }}>
+                          <img
+                            src={item.entries.image_url}
+                            alt="Shared entry attachment"
+                            style={{
+                              width: '100%',
+                              height: '144px',
+                              borderRadius: '14px',
+                              objectFit: 'cover',
+                              display: 'block',
+                              border: `1px solid ${COLORS.cardBorder}`
+                            }}
+                          />
+                        </div>
+                      )}
                       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', borderTop: '1px solid #F0F2F5', paddingTop: '12px' }}>
                         <div style={{ fontSize: '12px', color: COLORS.textMuted, fontWeight: '600' }}>View Full Answer →</div>
                       </div>
@@ -3291,6 +3326,23 @@ export default function App() {
                     }}>
                       {entry.answer}
                     </p>
+
+                    {entry.image_url && (
+                      <div style={{ margin: '0 0 16px 0' }}>
+                        <img
+                          src={entry.image_url}
+                          alt="Entry attachment"
+                          style={{
+                            width: '100%',
+                            height: '132px',
+                            borderRadius: '14px',
+                            objectFit: 'cover',
+                            display: 'block',
+                            border: `1px solid ${COLORS.cardBorder}`
+                          }}
+                        />
+                      </div>
+                    )}
 
                     <div className="entry-card__meta" style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
                       <div className="entry-card__meta-main" style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
