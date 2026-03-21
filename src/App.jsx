@@ -597,6 +597,7 @@ export default function App() {
   const [notificationsError, setNotificationsError] = useState(false);
   const [pushSupported, setPushSupported] = useState(false);
   const [pushRegistered, setPushRegistered] = useState(false);
+  const [isStandalonePwa, setIsStandalonePwa] = useState(false);
   
   const searchInputRef = useRef(null);
   
@@ -764,6 +765,36 @@ export default function App() {
     }
   }, [supabase]);
 
+  const resetEntryComposer = useCallback(() => {
+    setEditingEntryId(null);
+    setFormQuestion('');
+    setFormSubject(SUBJECTS[0]);
+    setFormChapter('');
+    setFormAnswer('');
+    setFormTags('');
+    setImageFile(null);
+    setImagePreview(null);
+    setAddStep(1);
+  }, []);
+
+  const closeTransientLayers = useCallback(() => {
+    setSelectedEntry(null);
+    setShowDeleteConfirm(false);
+    setShowAddEntry(false);
+    setShowAIModal(false);
+    setShowClerkSettings(false);
+    setShowSignOutConfirm(false);
+    setShowLightbox(false);
+    setCardActionEntry(null);
+    setIsAnswerFormOpen(false);
+    setActiveSearchSurface(null);
+  }, []);
+
+  const navigateToTab = useCallback((nextTab) => {
+    closeTransientLayers();
+    setCurrentTab(nextTab);
+  }, [closeTransientLayers]);
+
   const handleNotificationNavigation = useCallback((destinationUrl = '/') => {
     if (typeof window === 'undefined') return;
 
@@ -773,9 +804,9 @@ export default function App() {
       const entryId = url.searchParams.get('entry');
 
       if (nextTab && TAB_ITEMS.some((item) => item.id === nextTab)) {
-        setCurrentTab(nextTab);
+        navigateToTab(nextTab);
       } else if (entryId) {
-        setCurrentTab('Notifications');
+        navigateToTab('Notifications');
       }
 
       if (entryId) {
@@ -802,19 +833,7 @@ export default function App() {
     } catch (err) {
       console.error('Handle notification navigation error:', err);
     }
-  }, [entries, feedEntries]);
-
-  const resetEntryComposer = useCallback(() => {
-    setEditingEntryId(null);
-    setFormQuestion('');
-    setFormSubject(SUBJECTS[0]);
-    setFormChapter('');
-    setFormAnswer('');
-    setFormTags('');
-    setImageFile(null);
-    setImagePreview(null);
-    setAddStep(1);
-  }, []);
+  }, [entries, feedEntries, navigateToTab]);
 
   const closeEntryComposer = useCallback(() => {
     setShowAddEntry(false);
@@ -943,6 +962,22 @@ export default function App() {
       && 'Notification' in window
       && Boolean(WEB_PUSH_PUBLIC_KEY);
     setPushSupported(supported);
+  }, []);
+
+  useEffect(() => {
+    if (typeof window === 'undefined') return undefined;
+
+    const mediaQuery = window.matchMedia('(display-mode: standalone)');
+    const syncStandaloneState = () => {
+      setIsStandalonePwa(Boolean(mediaQuery.matches || window.navigator.standalone));
+    };
+
+    syncStandaloneState();
+    mediaQuery.addEventListener?.('change', syncStandaloneState);
+
+    return () => {
+      mediaQuery.removeEventListener?.('change', syncStandaloneState);
+    };
   }, []);
 
   useEffect(() => {
@@ -2309,7 +2344,7 @@ export default function App() {
       {/* Clerk Loading State - prevent blank page flash */}
       {!isLoaded && null}
       <SignedIn>
-        <div className="app-shell">
+        <div className={`app-shell ${isStandalonePwa ? 'app-shell--standalone' : ''}`}>
           <aside className="desktop-sidebar">
             <div className="desktop-sidebar__brand card-base">
               <div className="desktop-sidebar__logo">SV</div>
@@ -2320,7 +2355,7 @@ export default function App() {
             </div>
 
             <div className="desktop-sidebar__profile card-base">
-              <div className="desktop-sidebar__avatar" onClick={() => setCurrentTab('Profile')}>
+              <div className="desktop-sidebar__avatar" onClick={() => navigateToTab('Profile')}>
                 {(profile?.avatar_url || user?.imageUrl) ? (
                   <img src={profile?.avatar_url || user?.imageUrl} alt="Avatar" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
                 ) : (profile?.display_name || user?.firstName || 'U')[0].toUpperCase()}
@@ -2339,7 +2374,7 @@ export default function App() {
                   active={currentTab === item.id}
                   badge={item.id === 'Notifications' ? unreadCount : 0}
                   bellShakeKey={bellShakeKey}
-                  onClick={() => setCurrentTab(item.id)}
+                  onClick={() => navigateToTab(item.id)}
                 />
               ))}
             </div>
@@ -2554,7 +2589,7 @@ export default function App() {
                   <ICONS.Search />
                 </button>
                 <div 
-                  onClick={() => setCurrentTab('Profile')}
+                  onClick={() => navigateToTab('Profile')}
                   style={{
                     width: '40px',
                     height: '40px',
@@ -2705,7 +2740,7 @@ export default function App() {
 
               <div className="profile-settings-card" style={{ backgroundColor: COLORS.cardSurface, borderRadius: '24px', overflow: 'hidden', boxShadow: COLORS.shadow }}>
                 <SettingRow icon={ICONS.Lock} label="Change Password" onClick={() => setShowClerkSettings(true)} />
-                <SettingRow icon={ICONS.Edit} label={`My Review Queue (${reviewQueue.length})`} onClick={() => setCurrentTab('Review')} />
+                <SettingRow icon={ICONS.Edit} label={`My Review Queue (${reviewQueue.length})`} onClick={() => navigateToTab('Review')} />
                 <SettingRow icon={ICONS.Bell} label="Notification Status" onClick={() => {
                   if (notificationPermission === 'default') requestNotificationPermission();
                 }}>
@@ -2821,7 +2856,7 @@ export default function App() {
                   <h3 style={{ fontSize: '18px', fontWeight: '700', color: COLORS.textDark, margin: '0 0 8px 0' }}>Be the first to share a question with your class.</h3>
                   <p style={{ fontSize: '13px', color: COLORS.textMuted, margin: '0 0 24px 0' }}>One shared entry can help everyone revise faster.</p>
                   <button 
-                    onClick={() => setCurrentTab('Home')}
+                    onClick={() => navigateToTab('Home')}
                     className="btn-primary press"
                     style={{ maxWidth: '240px' }}
                   >Share an Entry</button>
@@ -3478,11 +3513,11 @@ export default function App() {
 
               <div className="desktop-summary__section desktop-summary__tips">
                 <div className="desktop-summary__eyebrow">Quick actions</div>
-                <button className="btn-secondary press" onClick={() => setCurrentTab('Review')}>
+                <button className="btn-secondary press" onClick={() => navigateToTab('Review')}>
                   <RefreshCw size={16} strokeWidth={2.1} />
                   Open Review Queue
                 </button>
-                <button className="btn-secondary press" onClick={() => setCurrentTab('Starred')}>
+                <button className="btn-secondary press" onClick={() => navigateToTab('Starred')}>
                   <Star size={16} strokeWidth={2.1} />
                   View Starred
                 </button>
@@ -3504,9 +3539,10 @@ export default function App() {
         backgroundColor: COLORS.bg,
         transform: selectedEntry ? 'translateX(0)' : 'translateX(100%)',
         transition: 'transform 250ms ease-out',
-        // Optional: Ensure mobile devices don't clip contents, allow vertical scroll only in overlay
         overflowY: 'auto',
-        overflowX: 'hidden'
+        overflowX: 'hidden',
+        paddingTop: 'env(safe-area-inset-top, 0px)',
+        paddingBottom: 'env(safe-area-inset-bottom, 0px)'
       }}>
         {/* Detail view no longer needs the complex dark pattern */}
 
@@ -3514,18 +3550,19 @@ export default function App() {
           <div style={{
             position: 'relative',
             zIndex: 1,
-            maxWidth: '480px',
+            width: 'min(100%, 480px)',
             margin: '0 auto',
             minHeight: '100dvh',
             display: 'flex',
-            flexDirection: 'column'
+            flexDirection: 'column',
+            paddingBottom: 'calc(112px + env(safe-area-inset-bottom, 0px))'
           }}>
             {/* Overlay Top Bar */}
             <div style={{
               display: 'flex',
               alignItems: 'center',
               justifyContent: 'space-between',
-              padding: '24px 20px 16px',
+              padding: '18px 20px 16px',
               borderBottom: 'none',
               position: 'sticky',
               top: 0,
@@ -4832,7 +4869,7 @@ export default function App() {
             active={currentTab === 'Home'}
             badge={0}
             bellShakeKey={bellShakeKey}
-            onClick={() => setCurrentTab('Home')}
+            onClick={() => navigateToTab('Home')}
             compact
           />
           <NavItemButton
@@ -4840,7 +4877,7 @@ export default function App() {
             active={currentTab === 'Feed'}
             badge={0}
             bellShakeKey={bellShakeKey}
-            onClick={() => setCurrentTab('Feed')}
+            onClick={() => navigateToTab('Feed')}
             compact
           />
 
@@ -4860,7 +4897,7 @@ export default function App() {
             active={currentTab === 'Notifications'}
             badge={unreadCount}
             bellShakeKey={bellShakeKey}
-            onClick={() => setCurrentTab('Notifications')}
+            onClick={() => navigateToTab('Notifications')}
             compact
           />
           <NavItemButton
@@ -4868,7 +4905,7 @@ export default function App() {
             active={currentTab === 'Profile'}
             badge={0}
             bellShakeKey={bellShakeKey}
-            onClick={() => setCurrentTab('Profile')}
+            onClick={() => navigateToTab('Profile')}
             compact
           />
         </div>
