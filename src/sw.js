@@ -2,48 +2,12 @@
 import { clientsClaim } from 'workbox-core';
 import { precacheAndRoute, cleanupOutdatedCaches, createHandlerBoundToURL } from 'workbox-precaching';
 import { registerRoute, NavigationRoute } from 'workbox-routing';
-import { CacheFirst, NetworkFirst } from 'workbox-strategies';
-import { CacheableResponsePlugin } from 'workbox-cacheable-response';
-import { ExpirationPlugin } from 'workbox-expiration';
 
 self.skipWaiting();
 clientsClaim();
 
 precacheAndRoute(self.__WB_MANIFEST || []);
 cleanupOutdatedCaches();
-
-registerRoute(
-  ({ request, url }) => request.destination === 'style' && url.origin === 'https://fonts.googleapis.com',
-  new CacheFirst({
-    cacheName: 'google-fonts-stylesheets',
-    plugins: [
-      new CacheableResponsePlugin({ statuses: [0, 200] }),
-      new ExpirationPlugin({ maxEntries: 10, maxAgeSeconds: 60 * 60 * 24 * 365 })
-    ]
-  })
-);
-
-registerRoute(
-  ({ url }) => url.origin === 'https://fonts.gstatic.com',
-  new CacheFirst({
-    cacheName: 'google-fonts-webfonts',
-    plugins: [
-      new CacheableResponsePlugin({ statuses: [0, 200] }),
-      new ExpirationPlugin({ maxEntries: 20, maxAgeSeconds: 60 * 60 * 24 * 365 })
-    ]
-  })
-);
-
-registerRoute(
-  ({ url }) => /^https:\/\/.*\.supabase\.co\/rest\/.*/i.test(url.href),
-  new NetworkFirst({
-    cacheName: 'supabase-api',
-    plugins: [
-      new CacheableResponsePlugin({ statuses: [0, 200] }),
-      new ExpirationPlugin({ maxEntries: 50, maxAgeSeconds: 60 * 5 })
-    ]
-  })
-);
 
 const navigationHandler = createHandlerBoundToURL('/index.html');
 registerRoute(new NavigationRoute(navigationHandler, {
@@ -54,7 +18,7 @@ self.addEventListener('push', (event) => {
   const payload = event.data ? event.data.json() : {};
 
   event.waitUntil((async () => {
-    const windowClients = await clients.matchAll({ type: 'window', includeUncontrolled: true });
+    const windowClients = await self.clients.matchAll({ type: 'window', includeUncontrolled: true });
     const hasVisibleClient = windowClients.some((client) => client.visibilityState === 'visible' || client.focused);
 
     if (hasVisibleClient) {
@@ -86,7 +50,7 @@ self.addEventListener('notificationclick', (event) => {
   const destinationUrl = new URL(event.notification.data?.url || '/', self.location.origin).toString();
 
   event.waitUntil((async () => {
-    const allClients = await clients.matchAll({ type: 'window', includeUncontrolled: true });
+    const allClients = await self.clients.matchAll({ type: 'window', includeUncontrolled: true });
     for (const client of allClients) {
       const clientUrl = new URL(client.url);
       if (clientUrl.origin === self.location.origin) {
@@ -98,6 +62,6 @@ self.addEventListener('notificationclick', (event) => {
         return;
       }
     }
-    await clients.openWindow(destinationUrl);
+    await self.clients.openWindow(destinationUrl);
   })());
 });

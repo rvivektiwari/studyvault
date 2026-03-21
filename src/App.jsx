@@ -113,9 +113,9 @@ const SettingRow = ({ icon, label, onClick, isDestructive, hasToggle, toggleValu
       alignItems: 'center',
       justifyContent: 'space-between',
       padding: '16px',
-      borderBottom: '1px solid #F0F2F5',
+      borderBottom: `1px solid ${COLORS.cardBorder}`,
       cursor: (hasToggle || isTheme) ? 'default' : 'pointer',
-      backgroundColor: '#FFF',
+      backgroundColor: COLORS.cardSurface,
       width: '100%'
     }}
   >
@@ -156,12 +156,16 @@ const SettingRow = ({ icon, label, onClick, isDestructive, hasToggle, toggleValu
       <div style={{ display: 'flex', backgroundColor: COLORS.bg, borderRadius: '10px', padding: '2px' }}>
         <button 
           onClick={() => onThemeChange('light')}
-          style={{ border: 'none', backgroundColor: currentTheme === 'light' ? '#FFF' : 'transparent', borderRadius: '8px', padding: '4px 10px', fontSize: '11px', fontWeight: '600', color: currentTheme === 'light' ? COLORS.textDark : COLORS.textMuted, cursor: 'pointer' }}
+          style={{ border: 'none', backgroundColor: currentTheme === 'light' ? COLORS.cardSurface : 'transparent', borderRadius: '8px', padding: '4px 10px', fontSize: '11px', fontWeight: '600', color: currentTheme === 'light' ? COLORS.textDark : COLORS.textMuted, cursor: 'pointer' }}
         >Light</button>
         <button 
           onClick={() => onThemeChange('dark')}
-          style={{ border: 'none', backgroundColor: currentTheme === 'dark' ? '#FFF' : 'transparent', borderRadius: '8px', padding: '4px 10px', fontSize: '11px', fontWeight: '600', color: currentTheme === 'dark' ? COLORS.textDark : COLORS.textMuted, cursor: 'pointer' }}
+          style={{ border: 'none', backgroundColor: currentTheme === 'dark' ? COLORS.cardSurface : 'transparent', borderRadius: '8px', padding: '4px 10px', fontSize: '11px', fontWeight: '600', color: currentTheme === 'dark' ? COLORS.textDark : COLORS.textMuted, cursor: 'pointer' }}
         >Dark</button>
+        <button 
+          onClick={() => onThemeChange('mixed')}
+          style={{ border: 'none', backgroundColor: currentTheme === 'mixed' ? COLORS.cardSurface : 'transparent', borderRadius: '8px', padding: '4px 10px', fontSize: '11px', fontWeight: '600', color: currentTheme === 'mixed' ? COLORS.textDark : COLORS.textMuted, cursor: 'pointer' }}
+        >Mixed</button>
       </div>
     )}
 
@@ -572,7 +576,8 @@ export default function App() {
   const [showSignOutConfirm, setShowSignOutConfirm] = useState(false);
   const [ svTheme, setSvTheme ] = useState(() => {
     if (typeof window === 'undefined') return 'light';
-    return localStorage.getItem('sv_theme') || 'light';
+    const storedTheme = localStorage.getItem('sv_theme');
+    return ['light', 'dark', 'mixed'].includes(storedTheme) ? storedTheme : 'light';
   });
   const [ svNotifs, setSvNotifs ] = useState(() => {
     if (typeof window === 'undefined') return false;
@@ -952,7 +957,14 @@ export default function App() {
 
   useEffect(() => {
     document.documentElement.dataset.theme = svTheme;
-    document.documentElement.style.colorScheme = svTheme;
+    document.documentElement.style.colorScheme = svTheme === 'dark' ? 'dark' : 'light';
+    const themeColorMeta = document.querySelector('meta[name="theme-color"]');
+    if (themeColorMeta) {
+      themeColorMeta.setAttribute(
+        'content',
+        svTheme === 'dark' ? '#0f172a' : svTheme === 'mixed' ? '#1e293b' : '#2563eb'
+      );
+    }
   }, [svTheme]);
 
   useEffect(() => {
@@ -3065,24 +3077,24 @@ export default function App() {
                   <button
                     key={subject}
                     onClick={() => setSelectedSubject(subject)}
-                    className={`no-select transition ${
-                      isSelected
-                        ? 'bg-primary text-white font-semibold'
-                        : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
-                    }`}
+                    className="no-select transition"
                     style={{
                       whiteSpace: 'nowrap',
                       flexShrink: 0,
                       padding: '6px 16px',
                       borderRadius: '9999px',
-                      border: 'none',
+                      border: `1px solid ${isSelected ? COLORS.primary : COLORS.cardBorder}`,
                       fontFamily: 'inherit',
                       fontSize: '13px',
+                      fontWeight: isSelected ? '700' : '500',
                       cursor: 'pointer',
                       outline: 'none',
                       position: 'relative',
                       overflow: 'hidden',
-                      paddingBottom: '11px'
+                      paddingBottom: '11px',
+                      backgroundColor: isSelected ? COLORS.primary : COLORS.cardSurface,
+                      color: isSelected ? '#ffffff' : COLORS.textPrimary,
+                      boxShadow: isSelected ? '0 10px 22px rgba(37, 99, 235, 0.18)' : '0 1px 3px rgba(15, 23, 42, 0.04)'
                     }}
                   >
                     <span style={{ position: 'relative', zIndex: 1 }}>{subject}</span>
